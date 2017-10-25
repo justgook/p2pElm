@@ -1,0 +1,153 @@
+.avatar
+  position: absolute
+  top: 0
+  left: 0
+  background: rgba(1,1,1,.3)
+  border-radius: 50%
+  font-size: calc(100vw / 12)
+  width: 1.5em
+  height: 1.5em
+
+.avatar.p2
+  left: calc(100vw / 8 * 1)
+.avatar.p2 .Char-head:before
+  background-color: #00b200
+.avatar.p2 .Char-hair:after
+  background-color: #00B200
+
+.avatar.p3
+  left: calc(100vw / 8 * 2)
+.avatar.p3 .Char-head:before
+  background-color: #0000b2
+.avatar.p3 .Char-hair:after
+  background-color: #0000B2
+
+.avatar.p4
+  left: calc(100vw / 8 * 3)
+.avatar.p4 .Char-head:before
+  background-color: #b2b200
+.avatar.p4 .Char-hair:after
+  background-color: #b2b200
+
+.avatar.p5
+  left: calc(100vw / 8 * 4)
+.avatar.p5 .Char-head:before
+  background-color: #b200b2
+.avatar.p5 .Char-hair:after
+  background-color: #b200b2
+
+.avatar.p6
+  left: calc(100vw / 8 * 5)
+.avatar.p6 .Char-head:before
+  background-color: #00b2b2
+.avatar.p6 .Char-hair:after
+  background-color: #00b2b2
+
+.avatar.p7
+  left: calc(100vw / 8 * 6)
+.avatar.p7 .Char-head:before
+  background-color: #777777
+.avatar.p7 .Char-hair:after
+  background-color: #777777
+
+
+.avatar.p8
+  left: calc(100vw / 8 * 7)
+.avatar.p8 .Char-head:before
+  background-color: #b20000
+.avatar.p8 .Char-hair:after
+  background-color: #b20000
+
+
+.Char
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+
+.Char-head
+  width: calc(212em/220)
+  height: calc(200em/220)
+  position: relative
+  top: calc(20em/220)
+
+.Char-head:before
+  display: block
+  content: ""
+  position: absolute
+  width: 100%
+  height: 100%
+  border-radius: calc(90em/220) calc(90em/220) calc(80em/220) calc(80em/220) / calc(80em/220) calc(80em/220) calc(70em/220) calc(70em/220)
+  border: calc(3em/220) solid #111
+  background-color: #f9f9f9
+  box-sizing: border-box
+  box-shadow: inset calc(-7em/220) calc(-7em/220) rgba(1,1,1, 0.3)//#b2b7b8
+  z-index: 2
+
+.Char-face
+  background-color: #fae5be
+  top: calc(25em/220)
+  right: calc(22em/220)
+  bottom: calc(22em/220)
+  left: calc(22em/220)
+  border-radius: calc(60em/220) calc(60em/220) calc(65em/220) calc(65em/220) / calc(60em/220) calc(60em/220) calc(60em/220) calc(60em/220)
+  border: calc(3em/220) solid #111
+  position: absolute
+  box-shadow: inset calc(-9em/220) calc(9em/220) #edc392
+  z-index: 3
+
+.Char-eyes
+  width: calc(110em/220)
+  height: calc(100em/220)
+  margin: calc(-50em/220) 0 0 calc(-55em/220)
+  left: 50%
+  top: 50%
+  position: absolute
+
+.Char-eye
+  width: calc(15em/220)
+  background-color: #0c0c0c
+  border-radius: calc(7em/220)
+  position: absolute
+  top: 0
+  bottom: 0
+
+.Char-eye:last-child
+  right: 0
+
+.Char-hair
+  width: calc(82em/220)
+  height: calc(82em/220)
+  margin: calc(-41em/220) 0 0 calc(-41em/220)
+  left: 50%
+  top: calc(-14em/220)
+  border-radius: 50%
+  background-color: #943b56
+  box-shadow: inset calc(6em/220) calc(6em/220) 0 calc(8em/220) #da729c
+  z-index: 1
+  border: calc(3em/220) solid #111
+  position: absolute
+
+.Char-hair:before
+  width: calc(26em/220)
+  height: calc(26em/220)
+  background-color: #FFF
+  content: ""
+  display: block
+  border-radius: 50%
+  left: calc(10em/220)
+  top: calc(15em/220)
+  position: absolute
+
+.Char-hair:after
+  width: calc(30em/220)
+  height: calc(42em/220)
+  background-color: #FFF
+  content: ""
+  display: block
+  border-radius: calc(16em/220)
+  border: calc(3em/220) solid #111
+  box-shadow: inset calc(-7em/220) calc(-7em/220) #b2b7b8
+  left: calc(25em/220)
+  bottom: calc(-10em/220)
+  position: absolute

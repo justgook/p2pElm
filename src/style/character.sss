@@ -1,0 +1,104 @@
+// http://www.sephyka.com/box-stories/box-office/
+
+.player, .player::before, .player::after, .player > .glasses, .player > .glasses::before, .player > .glasses::after
+  display: block
+  box-sizing: border-box
+  width: .5em
+  height: .5em
+  position: absolute
+  transform-origin: 50% 50%
+  transform-style: preserve-3d
+  backface-visibility: hidden
+
+.player::before, .player::after, .player > .glasses::before, .player > .glasses::after
+  content: ""
+
+.player
+  background: #66533f
+  transform: translate3d(.25em, .25em, .5em)
+  animation: jump .6s linear alternate infinite
+  animation-timing-function: cubic-bezier(0.5, -0.5, 0.5, 1.5)
+
+.player::before
+  background: #261f16
+  background-image: linear-gradient(#da987b, #da987b)
+  background-repeat: no-repeat
+  background-size: 20% 70%
+  background-position: bottom right
+  transform: rotateX(-90deg) translate3d(0, .25em,.25em)
+
+.player::after
+  background: #e6af8a
+  background-image: linear-gradient(#4d3e2f, #4d3e2f)
+  background-size: 30% 100%
+  background-repeat: no-repeat
+  transform: rotateY(90deg) translate3d(.25em, 0, .25em)
+
+.player > .glasses
+  transform: rotateY(90deg) translate3d(.25em, 0, .30em) //skewX(10deg)
+  z-index: 2
+
+
+.player > .glasses::before, .player > .glasses::after
+  left: 5%
+  width: 60%
+  height: 50%
+  background: rgba(226,226,226,1)
+  background: linear-gradient(45deg, rgba(226,226,226,.7) 0%, rgba(219,219,219,.7) 50%, rgba(209,209,209,.5) 51%, rgba(254,254,254,.5) 100%)
+  border: .05em #261a1a solid
+
+.player > .glasses::before
+  top: -5%
+
+.player > .glasses::after
+  bottom: -5%
+
+.player.up::after
+  background: #33291f
+  background-image: linear-gradient(#e6af8a, #e6af8a)
+  background-repeat: no-repeat
+  background-size: 70% 20%
+  background-position: top right
+.player.up::before
+  background-image: none
+.player.up > .glasses
+  transform: rotateY(90deg) rotateX(270deg) translate3d(.25em, 0, -.30em) //skewX(10deg)
+
+
+.player.down::after
+  background: #33291f
+  background-image: linear-gradient(#e6af8a, #e6af8a)
+  background-repeat: no-repeat
+  background-size: 70% 20%
+  background-position: bottom right
+
+.player.down::before
+  background: #e6af8a
+  background-image: linear-gradient(#4d3e2f, #4d3e2f)
+  background-size: 100% 30%
+  background-repeat: no-repeat
+
+.player.down > .glasses
+  transform: rotateY(90deg) rotateX(270deg) translate3d(.25em, 0, .30em) //skewX(10deg)
+
+
+.player.left::after
+  background: #33291f
+
+.player.left::before
+  background-image: linear-gradient(#e6af8a, #e6af8a)
+  background-repeat: no-repeat
+  background-size: 20% 70%
+  background-position: bottom left
+
+.player.left > .glasses
+  transform: rotateY(90deg) translate3d(.25em, 0, -.30em) //skewX(10deg)
+
+
+@keyframes jump
+  // 0%
+  //  transform: translate3d(.25em, .25em, 1.8em) scale3d(.9,.9,1)
+  0%
+    transform: translate3d(.25em, .25em, 1.8em) scale3d(.9,.9,1)
+  40%
+    transform: translate3d(.25em, .25em, 1.8em) scale3d(.9,.9,1)

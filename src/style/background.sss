@@ -1,0 +1,195 @@
+// https: //codepen.io/Mark_Bowley/pen/xEbuI
+
+// https: //codepen.io/mghayour/full/FeIbx
+
+
+// https: //codepen.io/kevinjannis/full/wyFga
+
+
+// http: //chilliconcode.com/project/road-trip-css-animation/
+// http: //chilliconcode.com/project/studio-ghibli-characters-css-art/
+
+
+
+// .mountains
+//   background: #55729e
+//   background: linear-gradient(#677da4,#55729e)
+//   width: 300vh
+//   height: 100vh
+//   bottom: 40%
+//   -webkit-clip-path:  polygon(0% 62%, 4% 74%, 21% 18%, 24% 32%, 32% 0%, 50% 62%, 54% 74%, 71% 18%, 74% 32%, 82% 0%, 100% 62%, 100% 100%, 0 100%)
+//   animation:  anim50 linear 60s
+//   animation-iteration-count:  infinite
+//   overflow: hidden
+// .snow
+//   width: 100%
+//   height: 50%
+//   background: linear-gradient(#f9feff, transparent)
+
+// .mountain-shadow
+//   width: 100%
+//   height: 100%
+//   background: #3d5887
+//   background: linear-gradient(#93accc 0%, #3d5887 50%)
+//   -webkit-clip-path:  polygon(4% 74%, 9% 90%, 8% 80%, 14% 64%, 16% 46%, 20% 30%, 21% 18%, 24% 32%, 27% 42%, 31% 50%, 30% 20%, 32% 0%, 54% 74%, 59% 90%, 58% 80%, 64% 64%, 66% 46%, 70% 30%, 71% 18%, 74% 32%, 77% 42%, 81% 50%, 80% 20%, 82% 0%, 100% 0%, 0% 0%)
+
+
+body
+  background: #6dd3e7
+  padding: 100px
+  overflow-x: hidden
+
+
+.cloud
+  animation: clouds 60s infinite linear
+  border-radius: 10px
+  position: relative
+  margin: 33px 0 0 0
+  width: 54px
+  height: 5px
+  background: #f7e7eb
+
+.cloud.tiny
+  transform: scale(0.5, 0.5)
+
+.cloud.small
+  transform: scale(1, 1)
+
+.cloud.normal
+  transform: scale(2, 2)
+
+.cloud.large
+  transform: scale(4, 4)
+
+.cloud div
+  box-shadow: inset -2px -3px 0 0 #f7e7eb
+  position: absolute
+  border-radius: 50%
+  width: 12px
+  height: 12px
+  left: -3px
+  bottom: 0
+  background: #fafbf0
+  z-index: 10
+
+.cloud div:first-child + div
+  transform: scale(1.6, 1.6)
+  margin: 0 0 4px 13px
+  z-index: 9
+
+.cloud div:first-child + div + div
+  transform: scale(2.4, 2.4)
+  margin: 0 0 9px 32px
+  z-index: 8
+
+.cloud div:first-child + div + div + div
+  transform: scale(1.3, 1.3)
+  margin: 0 0 2px 50px
+  z-index: 7
+
+
+@-webkit-keyframes clouds
+  0%
+    left: -100%
+
+  100%
+    left: 120%
+
+
+@-moz-keyframes clouds
+  0%
+    left: -100%
+
+  100%
+    left: 120%
+
+
+@-ms-keyframes clouds
+  0%
+    left: -100%
+
+  100%
+    left: 120%
+
+
+@keyframes clouds
+  0%
+    left: -100%
+
+  100%
+    left: 120%
+
+
+.cloud-1
+  animation-duration: 263s
+  animation-delay: -30s
+  margin-left: 20%
+
+
+.cloud-2
+
+  animation-duration: 99s
+  animation-delay: -30s
+  margin-left: 90%
+
+
+.cloud-3
+  animation-duration: 142s
+  animation-delay: -30s
+  margin-left: 50%
+
+
+.cloud-4
+  animation-duration: 152s
+  animation-delay: -30s
+  margin-left: 43%
+
+
+.cloud-5
+  animation-duration: 215s
+  animation-delay: -30s
+  margin-left: 83%
+
+
+.cloud-6
+  animation-duration: 139s
+  animation-delay: -30s
+  margin-left: 73%
+
+
+.cloud-7
+  animation-duration: 109s
+  animation-delay: -30s
+  margin-left: 69%
+
+
+.cloud-8
+  animation-duration: 121s
+  animation-delay: -30s
+  margin-left: 100%
+
+
+.cloud-9
+  animation-duration: 101s
+  animation-delay: -30s
+  margin-left: 10%
+
+
+.cloud-10
+  animation-duration: 126s
+  animation-delay: -30s
+  margin-left: 14%
+
+
+.cloud-11
+  animation-duration: 96s
+  animation-delay: -30s
+  margin-left: 73%
+
+
+.cloud-12
+  animation-duration: 83s
+  animation-delay: -30s
+  margin-left: 51%
+
+

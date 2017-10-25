@@ -1,0 +1,265 @@
+.container
+  transform-origin: 0 0
+  transform-style: preserve-3d
+
+// https://codepen.io/short/pen/aLmQPw CUBE COLORS!
+.tiles
+  width: 3em
+  height: 3em
+  background-color: #eaeaea
+  background-image: linear-gradient(hsla(0,0%,0%,.1) 2px, transparent 2px, transparent calc(100% - 2px), hsla(0,0%,0%,.1) calc(100% - 2px)),
+                    linear-gradient(90deg, hsla(0,0%,0%,.1) 2px,  transparent 2px, transparent calc(100% - 2px), transparent calc(100% - 2px))
+  background-size: 1em 1em, 1em 1em
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%) rotateX(45deg) rotateZ(45deg)
+  transform-origin: 50% 50%
+  transform-style: preserve-3d
+  background-position: -1px -1px, -1px -1px
+  backface-visibility: hidden
+
+// !!!! APPIER ANIMATION!!!
+// https://codepen.io/rdfriedl/pen/bdvrjM?depth=everything&limit=all&order=popularity&page=4&q=isometric&show_forks=false
+.tile
+  position: absolute
+  width: 1em
+  height: 1em
+  transform-style: preserve-3d
+  // background: red
+
+.object-shadow
+.object-shadow
+  width: 1em
+  height: 1em
+  background: red
+  background: radial-gradient(circle at 60% 60%, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0) 50%)
+
+.cube,
+.cube:after,
+.cube:before
+  box-shadow: inset 0 0 0 .08em hsla(1,0%,0%,.1) // , inset 0 0 0 1px #f66
+  content: ''
+  box-sizing: border-box
+  backface-visibility: visible
+  // border: 1px solid #000
+
+.cube:after,
+.cube:before
+  width: inherit
+  height: inherit
+  position: absolute
+
+
+/* Top */
+.cube
+
+  background-color: #dbdbdb // #f66
+  // position: relative
+  transform: translateZ(1em)
+  transform-style: preserve-3d
+//-webkit-gradient(linear, left top, right top, from(#f2a30f), to(#d91414))
+
+/* Left */
+.cube:after
+  background-color: #dbdbdb //#e55
+  transform: rotateX(90deg) rotateY(180deg) //translateY(1.3%) //Gap fixing
+  transform-origin: 50% 100% //-50%
+
+/* Right */
+.cube:before
+  background-color: #888888 //#d44
+  transform: rotateY(-90deg) rotateX(-180deg) // translateX(1.3%)
+  transform-origin: 100% 50%
+
+// https://cssanimation.rocks/spheres/
+// http://jackadam.github.io/2010/3d-rotating-molecules-on-the-iphoneipad/
+
+.ball
+  position: absolute //TODO make all objects by default at center of tile
+  top: 0
+  left: 0
+  // width: inherit
+  // height: inherit
+  transform: rotateZ(-45deg) rotateX(-45deg) translateY(-.25em) translateZ(.75em)
+  background-color: black
+  background-image: radial-gradient(circle at .5em 1.2em, rgba(255,255,255, .2), rgba(255,255,255, .1) .8em, transparent 1em)
+  border-radius: 50%
+  // z-index: 10
+  transform-origin: 50% 50%
+  animation: ball 5s infinite cubic-bezier(1,.01,.26,.69)
+
+@keyframes ball
+  10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 100%
+    background-color: #400
+  15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95%
+    background-color: black
+  0%, 20%, 40%, 60%, 75%, 85%
+    transform: rotateZ(-45deg) rotateX(-45deg) translateY(-.25em) translateZ(.75em) scale(.75)
+    // background-color: black
+    opacity: 1
+  10%, 30%, 50%, 67.5%, 80%, 87.5%
+    transform: rotateZ(-45deg) rotateX(-45deg) translateY(-.25em) translateZ(.75em) scale(.75) translateY(-.05em)
+
+    opacity: 1
+  100%
+    transform: rotateZ(-45deg) rotateX(-45deg) translateY(-.25em) translateZ(.75em) translateY(-.05em) scale(1)
+    opacity: 0
+
+.ball:before
+  content: ""
+  position: absolute
+  background: radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 70%)
+  border-radius: 50%
+  bottom: 2.5%
+  left: 5%
+  opacity: 0.6
+  height: 100%
+  width: 90%
+  filter: blur(.1em)
+  z-index: 2
+
+
+
+.ball:after
+  width: 100%
+  height: 100%
+  content: ""
+  position: absolute
+  top: .05em
+  left: .1em
+  border-radius: 50%
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4) 14%, rgba(255, 255, 255, 0) 24%)
+  transform: translateX(-0.26em) translateY(-0.3em) skewX(-20deg)
+  filter: blur(.03em) //TODO update that via gradiant
+
+
+
+.explosion
+  // width: 1em
+  // height: 1em
+  left: 0
+  bottom: 0
+  // background: blue
+  position: absolute
+  top: 0
+  left: 0
+  transform: rotateZ(-45deg) rotateX(-45deg) translateX(-2em) translateY(-.25em) translateZ(.7em) //translateZ(.75em)
+  border-radius: 50%
+
+
+  // background: red
+  // background-image:  radial-gradient(circle at .5em .5em, #d91414, #f2a30f 1em)
+
+.explosion
+  animation: explosion .5s infinite
+  box-shadow:
+    1.8em .2em .1em -.25em #f2a30f, 1.8em .2em  .1em -.25em #d91414,
+    2em .1em .1em -.125em #f2a30f, 2em .1em .1em -.125em #d91414,
+    2.3em -.3em .2em -.125em #f2a30f, 2.3em -.3em .25em -.125em #d91414,
+    1.7em -.2em .2em -.25em #f2a30f, 1.7em -.2em .1em -.25em #d91414,
+    2em -.4em .1em -.25em #f2a30f, 2em -.4em .1em -.25em #d91414
+
+@for $i from 1 to 5
+  .explosion:nth-child(5n + $i)
+    animation-delay: .$(i)s
+
+@keyframes explosion
+  0%
+    box-shadow:
+      1.8em .2em .1em -1em #f2a30f, 1.8em .2em  .1em -1em #d91414,
+      2em 0 .1em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414,
+      2em .1em .1em -2.125em #f2a30f, 2em .1em .1em -2.125em #d91414,
+      2em 0 .2em -2.125em #f2a30f, 2em 0 .25em -2.125em #d91414,
+      2em 0 .2em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414
+
+  40%
+    box-shadow:
+      1.8em .2em .1em -.3em #f2a30f, 1.8em .2em .1em -.3em #d91414,
+      2em 0 .1em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414,
+      2em .1em .1em -1.225em #f2a30f, 2em .1em .1em -1.225em #d91414,
+      2em 0 .2em -2.125em #f2a30f, 2em 0 .25em -2.125em #d91414,
+      2em 0 .2em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414
+
+  60%
+    box-shadow:
+      1.8em .2em .1em -.25em #f2a30f, 1.8em .2em  .1em -.25em #d91414,
+      2em 0 .1em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414,
+      2em .1em .1em -.225em #f2a30f, 2em .1em .1em -.225em #d91414,
+      2.3em -.3em .2em -.225em #f2a30f, 2.3em -.3em .25em -.225em #d91414,
+      2em 0 .2em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414
+
+  80%
+    box-shadow:
+      1.8em .2em .1em -.3em #f2a30f, 1.8em .2em  .1em -.3em #d91414,
+      2em 0 .1em -2.25em #f2a30f, 2em 0 .1em -2.25em #d91414,
+      2em .1em .1em -.125em #f2a30f, 2em .1em .1em -.125em #d91414,
+      2.3em -.3em .2em -.125em #f2a30f, 2.3em -.3em .25em -.125em #d91414,
+      1.7em -.2em .2em -.25em #f2a30f, 1.7em -.2em .1em -.25em #d91414
+
+  100%
+    box-shadow:
+      1.8em .2em .1em -.25em #f2a30f, 1.8em .2em  .1em -.25em #d91414,
+      2em -.4em .1em -.25em #f2a30f, 2em -.4em .1em -.25em #d91414,
+      2em .1em .1em -.125em #f2a30f, 2em .1em .1em -.125em #d91414,
+      2.3em -.3em .2em -.225em #f2a30f, 2.3em -.3em .25em -.225em #d91414,
+      1.7em -.2em .2em -.25em #f2a30f, 1.7em -.2em .1em -.25em #d91414
+
+
+
+
+//https://tympanus.net/codrops/2016/05/11/distorted-button-effects-with-svg-filters/
+.fire
+  animation: burn 1s ease-in-out infinite alternate
+
+.burn
+  animation: burn .65s ease-in-out infinite alternate
+
+@keyframes burn
+  0%
+    box-shadow: 0 0 20px #fefcc9,
+      10px -10px 30px #feec85,
+      -20px -20px 40px #ffae34,
+      20px -40px 50px #ec760c,
+      -20px -60px 60px #cd4606,
+      0 -80px 70px #973716,
+      10px -90px 80px #451b0e
+  100%
+    box-shadow: 0 0 20px #fefcc9,
+      10px -10px 30px #fefcc9,
+      -20px -20px 40px #feec85,
+      22px -42px 60px #ffae34,
+      -22px -58px 50px #ec760c,
+      0 -82px 80px #cd4606,
+      10px -90px 80px  #973716
+
+
+.cube
+  animation-duration: 1s
+  animation-name: bounceInDown
+  animation-fill-mode: backwards
+  // animation-play-state: paused
+  // animation-iteration-count: infinite
+
+
+@for $i from 1 to 9
+  .cube:nth-child(9n + $i)
+    animation-delay: .$(i)s
+
+
+@keyframes bounceInDown
+  from, 60%, 75%, 90%, to
+    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000)
+  0%
+    // opacity: 0
+    transform: translate3d(0, 0, calc(1em + 3000px))
+  60%
+    // opacity: 1
+    transform: translate3d(0, 0, calc(1em + 5px))
+  75%
+    transform: translate3d(0, 0, calc(1em + 35px))
+  90%
+    transform: translate3d(0, 0, calc(1em + 5px))
+  to
+    transform: translateZ(1em)
+
