@@ -1,24 +1,13 @@
-module Common.Players.Model exposing (Player(Player), Players, empty, updatePlayer, Status(..))
+module Common.Players.Model exposing (Player, Players, empty, updatePlayer, status, add, Status(..))
 
 type Bombs = Bombs Int Int
 type Status = Online | NotAvailable | Available
-type Player = Player Status Bombs Int
-
-
-type Player2 =
-    Player2
+type Player =
+  Player
     { status: Status
     , bombs: Bombs
     , speed: Int
     }
-
-playerUpdater2: Player2 -> Int -> Player2
-playerUpdater2 ((Player2 { bombs, speed, status }) as player) action =
-  case action of
-    0 -> Player2 { status = Online,  bombs = bombs, speed = speed} --Maybe there is nicer way?
-    1 -> Player2 { status = Available,  bombs = bombs, speed = speed} --Maybe there is nicer way?
-    -- 1 -> Player Available bombs speed
-    _ -> player
 
 type alias Players =
     { p1 : Player
@@ -31,7 +20,38 @@ type alias Players =
     , p8 : Player
     }
 
-updatePlayer : Players -> ( Int, Int ) -> Players
+status: Player -> Status
+status (Player { status }) = status
+
+add: Players -> Players
+add (({p1, p2, p3, p4, p5, p6, p7, p8}) as players) =
+  if status p1 == NotAvailable then {players | p1 = (playerUpdater p1 1)}
+  else if status p2 == NotAvailable then {players | p2 = (playerUpdater p2 1)}
+  else if status p3 == NotAvailable then {players | p3 = (playerUpdater p3 1)}
+  else if status p4 == NotAvailable then {players | p4 = (playerUpdater p4 1)}
+  else if status p5 == NotAvailable then {players | p5 = (playerUpdater p5 1)}
+  else if status p6 == NotAvailable then {players | p6 = (playerUpdater p6 1)}
+  else if status p7 == NotAvailable then {players | p7 = (playerUpdater p7 1)}
+  else if status p8 == NotAvailable then {players | p8 = (playerUpdater p8 1)}
+  else players
+
+empty: Players
+empty =
+  let
+    newPlayer = Player { status = NotAvailable,  bombs = (Bombs 1 1), speed = 10}
+  in
+  -- Players2
+    { p1 = newPlayer
+    , p2 = newPlayer
+    , p3 = newPlayer
+    , p4 = newPlayer
+    , p5 = newPlayer
+    , p6 = newPlayer
+    , p7 = newPlayer
+    , p8 = newPlayer
+    }
+
+updatePlayer: Players -> ( Int, Int ) -> Players
 updatePlayer players (index, action) =
   let update = \p -> playerUpdater (p players) action
   in case index of
@@ -46,23 +66,8 @@ updatePlayer players (index, action) =
     _ -> players
 
 playerUpdater: Player -> Int -> Player
-playerUpdater ((Player _ bombs speed) as player) action =
+playerUpdater ((Player { bombs, speed, status }) as player) action =
   case action of
-    0 -> Player Online bombs speed
-    1 -> Player Available bombs speed
+    0 -> Player { status = Online,  bombs = bombs, speed = speed} --Maybe there is nicer way?
+    1 -> Player { status = Available,  bombs = bombs, speed = speed} --Maybe there is nicer way?
     _ -> player
-
-empty: Players
-empty =
-  let
-    newPlayer = Player NotAvailable (Bombs 1 1) 10
-  in
-  { p1 = newPlayer
-  , p2 = newPlayer
-  , p3 = newPlayer
-  , p4 = newPlayer
-  , p5 = newPlayer
-  , p6 = newPlayer
-  , p7 = newPlayer
-  , p8 = newPlayer
-  }

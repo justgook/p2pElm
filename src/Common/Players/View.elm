@@ -2,7 +2,7 @@ module Common.Players.View exposing (view)
 
 import Html exposing (Html, text, ul, li, div)
 -- import String exposing (toString)
-import Common.Players.Model exposing (Player(Player), Status(..))
+import Common.Players.Model exposing (Player, status, Status(..))
 
 import Html.Attributes exposing (class, classList, style)
 
@@ -10,8 +10,8 @@ emptyNode : Html msg
 emptyNode = Html.text ""
 
 view: Player -> Int -> Html msg
-view (Player status bombs speed) index =
-  case status of
+view player index =
+  case status player of
     -- Online
     -- NotAvailable
     -- Available

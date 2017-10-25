@@ -22,17 +22,19 @@ encode: World -> String
 encode tiles =
   "test"
 
--- repeaterWithPlayer: Players-> Int -> Int -> Int -> Char -> (Int, List Item, Players)
--- repeaterWithPlayer players startX y n itemChar =
---   case itemChar of
---     ' ' -> (startX + n, [], players)
---     _ ->
---       ( startX + n
---       , startX + n - 1
---         |> List.range startX
---         |> map (\n -> Tile.parse itemChar n y)
---       , players
---       )
+repeaterWithPlayer: Players -> Int -> Int -> Int -> Char -> (Int, List Item, Players)
+repeaterWithPlayer players startX y n itemChar =
+  case itemChar of
+    ' ' -> (startX + n, [], players)
+    '@' ->
+        (startX + n, [], Players.add players)
+    _ ->
+      ( startX + n
+      , startX + n - 1
+        |> List.range startX
+        |> map (\n -> Tile.parse itemChar n y)
+      , players
+      )
 
 repeater: Int -> Int -> Int -> Char -> (Int, List Item)
 repeater startX y n itemChar =
@@ -44,6 +46,35 @@ repeater startX y n itemChar =
         |> List.range startX
         |> map (\n -> Tile.parse itemChar n y)
       )
+
+-- https://github.com/elm-lang/core/blob/master/src/Tuple.elm
+mapSecond2 : (b1 -> b2) -> (a, b1, c) -> (a, b2, c)
+mapSecond2 func (x, y, z) =
+  (x, func y, z)
+
+parseRowPlayers : Players -> Int -> String -> List Item -> Int -> List Char -> (List Item, Players)
+parseRowPlayers players x multiplier result y data =
+  case List.head data of
+    Just a ->
+      let
+        (newX, newResult, newPlayers) =
+          if (member a allowed) then
+              case (String.toInt multiplier) of
+                Ok 0 -> repeaterWithPlayer players x y 1 a |> mapSecond2 (\x -> result ++ x)
+                Ok i -> repeaterWithPlayer players x y i a |> mapSecond2 (\x -> result ++ x)
+                Err e -> (x, result, players)
+          else
+            (x, result, players)
+        newMultiplier =
+          if (member a allowed) then
+            "0"
+          else
+            (multiplier ++ String.fromChar a)
+      in
+        parseRowPlayers newPlayers newX newMultiplier newResult y (List.drop 1 data)
+    Nothing -> (result, players)
+
+
 
 -- TODO extract players as separate part
 parseRow : Int -> String -> List Item -> Int -> List Char -> List Item
@@ -74,17 +105,24 @@ init = World 0 0 [] Players.empty
 decode: String -> World
 decode tiles =
   let
-    rows = map toList (split "|" tiles)
-      |> List.indexedMap (parseRow 0 "0" [])
+    reducer item (result, players, y) =
+      let
+        (row, newPlayers) = parseRowPlayers players 0 "0" [] y item
+      in
+        (row :: result, newPlayers, y + 1)
+    (rows2, players, y) =  map toList (split "|" tiles)
+      |> List.foldl reducer ([], Players.empty, 0)
+
+    _= Debug.log "" players
   in
     World
-      ( map List.length rows --TODO fix it - if there is spaces in maximum width row (8# 3#) - width is 12, but result 11
+      ( map List.length rows2 --TODO fix it - if there is spaces in maximum width row (8# 3#) - width is 12, but result 11
       |> List.maximum
       |> Maybe.withDefault 0
       )
-      (List.length rows)
-      (concat rows)
-      Players.empty
+      (List.length rows2)
+      (concat rows2)
+      players
 
 getSize : World -> (Width, Height)
 getSize (World width height _ _) = (width, height)
@@ -94,10 +132,6 @@ getTiles (World _ _ tiles _) = tiles -- Should include (append) player tiles ext
 
 getPlayers: World -> Players
 getPlayers (World _ _ _ players) = players
-
--- getPlayers: Tiles -> Players
--- getPlayers tiles =
---   Players
 
 view : World -> Html msg
 view world =
