@@ -1,10 +1,15 @@
-module Common.Players.Model exposing (Player, Players, empty, updatePlayer, status, add, Status(..))
+module Common.Players.Model exposing (Player, Players, empty, updatePlayer, status, add, tiles, Status(..), Direction(..))
+import Common.Point exposing (Point(Point))
+
+type Direction = Up | Right | Down | Left
 
 type Bombs = Bombs Int Int
 type Status = Online | NotAvailable | Available
+
 type Player =
   Player
-    { status: Status
+    { possition: Point
+    , status: Status
     , bombs: Bombs
     , speed: Int
     }
@@ -20,36 +25,68 @@ type alias Players =
     , p8 : Player
     }
 
+add: Players -> Point -> Players
+add (({p1, p2, p3, p4, p5, p6, p7, p8}) as players) point =
+  if statusNotAvailable p1 then {players | p1 = createPlayer p1 point}
+  else if statusNotAvailable p2 then {players | p2 = createPlayer p2 point}
+  else if statusNotAvailable p3 then {players | p3 = createPlayer p3 point}
+  else if statusNotAvailable p4 then {players | p4 = createPlayer p4 point}
+  else if statusNotAvailable p5 then {players | p5 = createPlayer p5 point}
+  else if statusNotAvailable p6 then {players | p6 = createPlayer p6 point}
+  else if statusNotAvailable p7 then {players | p7 = createPlayer p7 point}
+  else if statusNotAvailable p8 then {players | p8 = createPlayer p8 point}
+  else players
+
 status: Player -> Status
 status (Player { status }) = status
 
-add: Players -> Players
-add (({p1, p2, p3, p4, p5, p6, p7, p8}) as players) =
-  if status p1 == NotAvailable then {players | p1 = (playerUpdater p1 1)}
-  else if status p2 == NotAvailable then {players | p2 = (playerUpdater p2 1)}
-  else if status p3 == NotAvailable then {players | p3 = (playerUpdater p3 1)}
-  else if status p4 == NotAvailable then {players | p4 = (playerUpdater p4 1)}
-  else if status p5 == NotAvailable then {players | p5 = (playerUpdater p5 1)}
-  else if status p6 == NotAvailable then {players | p6 = (playerUpdater p6 1)}
-  else if status p7 == NotAvailable then {players | p7 = (playerUpdater p7 1)}
-  else if status p8 == NotAvailable then {players | p8 = (playerUpdater p8 1)}
-  else players
+statusNotAvailable: Player -> Bool
+statusNotAvailable (Player { status }) = status == NotAvailable
+
+tiles: Players -> List {point: Point, direction: Direction, id: number}
+tiles (({p1, p2, p3, p4, p5, p6, p7, p8}) as players) =
+  tilesAppender 1 p1
+  <| tilesAppender 2 p2
+  <| tilesAppender 3 p3
+  <| tilesAppender 4 p4
+  <| tilesAppender 5 p5
+  <| tilesAppender 6 p6
+  <| tilesAppender 7 p7
+  <| tilesAppender 8 p8 []
 
 empty: Players
 empty =
   let
-    newPlayer = Player { status = NotAvailable,  bombs = (Bombs 1 1), speed = 10}
+    player = Player { status = NotAvailable,  bombs = (Bombs 1 1), speed = 10 , possition = Point 0 0}
   in
   -- Players2
-    { p1 = newPlayer
-    , p2 = newPlayer
-    , p3 = newPlayer
-    , p4 = newPlayer
-    , p5 = newPlayer
-    , p6 = newPlayer
-    , p7 = newPlayer
-    , p8 = newPlayer
+    { p1 = player
+    , p2 = player
+    , p3 = player
+    , p4 = player
+    , p5 = player
+    , p6 = player
+    , p7 = player
+    , p8 = player
     }
+
+tilesAppender : number -> Player -> List { direction : Direction, id : number, point : Point } -> List { direction : Direction, id : number, point : Point }
+tilesAppender id player tiles =
+  if not (statusNotAvailable player) then
+    {point = possition player, direction = Up, id = id} :: tiles
+  else tiles
+
+possition : Player -> Point
+possition (Player { possition }) = possition
+
+createPlayer : Player -> Point -> Player
+createPlayer (Player { bombs, speed }) p =
+      Player
+      { status = Available
+      , bombs = bombs
+      , speed = speed
+      , possition = p
+      }
 
 updatePlayer: Players -> ( Int, Int ) -> Players
 updatePlayer players (index, action) =
@@ -65,9 +102,23 @@ updatePlayer players (index, action) =
     7 -> {players | p8 = update .p8}
     _ -> players
 
+
+
+{-
+  Connected: 0,
+  Disconnected: 1,
+  Up: 2,
+  Right: 3,
+  Down: 4,
+  Left: 5,
+  Bomb: 6,
+  Error: 7,
+-}
+
 playerUpdater: Player -> Int -> Player
-playerUpdater ((Player { bombs, speed, status }) as player) action =
+playerUpdater ((Player { bombs, speed, status, possition }) as player) action =
   case action of
-    0 -> Player { status = Online,  bombs = bombs, speed = speed} --Maybe there is nicer way?
-    1 -> Player { status = Available,  bombs = bombs, speed = speed} --Maybe there is nicer way?
+    0 -> Player { status = Online,  bombs = bombs, speed = speed, possition = possition} --Maybe there is nicer way?
+    1 -> Player { status = Available,  bombs = bombs, speed = speed, possition = possition} --Maybe there is nicer way?
+    -- 2 -> Player { status = Available,  bombs = bombs, speed = speed, possition = possition} --Maybe there is nicer way?
     _ -> player

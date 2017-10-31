@@ -33,7 +33,7 @@ if (location.hash) { //Client
       const Elm = _[0]
       const server = _[1]
       // https://www.google.lv/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=0ahUKEwifqNGjvtvWAhXIJJoKHZdGAS4QjRwIBw&url=http%3A%2F%2Fwww.vizzed.com%2Fvideogames%2Fcharacter.php%3Fid%3D16064&psig=AOvVaw0XtkTDDvl0N-ScGaTvG3RC&ust=1507360945125240
-      const app = Elm.Main.fullscreen({ room: "15# |#13 #" + "|#6  6 #|# #@# # # # # #".repeat(7) + "|#13 #|15#"})
+      const app = Elm.Main.fullscreen({ room: "15#" + "|#6  6 #|# #@# # # # # #".repeat(6) + "|#13 #|15#"})
       const connected = []
       server(5).then(function (peers) {
         console.log(peers)

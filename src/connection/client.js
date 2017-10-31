@@ -38,7 +38,7 @@ function connectToServer(serverId, url) {
     const p = new Peer({ /*, trickle: false*/ }) //TODO what for trickle?
     const answer = new Promise(function (resolve, reject) {
       p.on('signal', function (data) { //TODO findout why ther is {candidate} signals (what for)
-        // if(data.candidate) 
+        // if(data.candidate)
         resolve(data)
       })
       p.signal(args.offer)

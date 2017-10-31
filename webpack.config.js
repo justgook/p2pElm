@@ -18,25 +18,9 @@ module.exports = function (env) {
           test: /\.sss$/,
           use: [
             'style-loader',
-            // { loader: 'css-loader', options: { importLoaders: 1 } },
             "postcss-loader"
           ],
         },
-        // {
-        //   test: /\.js$/,
-        //   exclude: /node_modules/,
-        //   loader: "babel-loader",
-        //   options: {
-        //     presets: [["env", {
-        //       "targets": {
-        //         "chrome": 54
-        //       },
-        //       "loose": true,
-        //       "modules": false,
-        //       // "include": ["transform-es2015-classes"]
-        //   }]],
-        //   }
-        // },
         {
           test: /\.elm$/,
           exclude: [/elm-stuff/, /node_modules/],

@@ -41,12 +41,9 @@ module.exports = { //TODO find better api and make it cleanner
         'event:' + (event) + '\n' +
         'data:' + JSON.stringify(data) + '\n'
       )
-      
       servers[id].leave = (index) => {
         servers[id].taken[index] = false
       }
-      
-
       let t = setInterval(function () {
         ping(res)
         // console.log(`Send Ping to Server(id: ${id})`)

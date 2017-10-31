@@ -1,16 +1,16 @@
-module Common.World.Tile exposing (Item, parse, view, allowed)
+module Common.World.Tile exposing (Item,  parse, view, allowed, player)
 
 import Html exposing (Html, text, ul, li, div)
 import Html.Attributes exposing (class, classList, style)
 import List exposing (map)
 
 import Common.Point exposing (Point(Point))
+import Common.Players.Model exposing (Direction(..))
 
-type Direction = Up | Right | Down | Left
 type alias Size = Int
 type alias Speed = Float
 
-type Item =  Player Point Direction | Box Point | Wall Point | Bomb Point Size Speed
+type Item =  Box Point | Wall Point | Bomb Point Size Speed
 
 -- http://www.sokobano.de/wiki/index.php?title=Level_format
 -- | Tile   | Char  |
@@ -21,12 +21,11 @@ type Item =  Player Point Direction | Box Point | Wall Point | Bomb Point Size S
 -- | Wall   | #     |
 -- | Bomb   | *     |
 allowed : List Char
-allowed = ['@','$','#','*', ' ']
+allowed = ['@','$','#', ' ']
 
 parse : Char -> Int -> Int -> Item
 parse kind x y =
   case kind of
-    '@' -> Player (Point x y) Down
     '$' ->  Box (Point x y)
     '#' ->  Wall (Point x y)
     '*' ->  Bomb (Point x y) 5 1
@@ -35,7 +34,6 @@ parse kind x y =
 view : Item -> Html msg
 view item =
   case item of
-    Player p d -> player p d
     Box p -> plain "box" p
     Wall p -> plain "cube" p
     Bomb p size speed -> bomb p size speed
