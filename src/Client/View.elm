@@ -1,8 +1,10 @@
 module Client.View exposing (..)
 
-import Html exposing (Html, div)
+import Client.Message exposing (Msg)
 import Client.Model exposing (Model)
+import Html exposing (Html, div)
 
-view : Model -> Html msg
+
+view : Model -> Html Msg
 view model =
-  div [] []
+    div [] []

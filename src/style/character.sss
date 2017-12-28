@@ -15,8 +15,8 @@
 
 .player
   background: #66533f
-  transform: translate3d(.25em, .25em, .5em)
-  animation: jump .6s linear alternate infinite
+  transform: translate3d(.25em, .25em, 1em)
+  // animation: jump .6s linear alternate infinite
   animation-timing-function: cubic-bezier(0.5, -0.5, 0.5, 1.5)
 
 .player::before
@@ -52,6 +52,22 @@
 
 .player > .glasses::after
   bottom: -5%
+
+.player > .body
+  position: absolute
+  // background: red
+  // width: 1.25em
+  // height: .25em
+  // transform: translate3d(0, 0, -1em) rotateY(90deg)
+  // transform-origin: 50% 50%
+
+  // &::after
+  //   content: ""
+  //   display: block
+  //   width: .25em
+  //   height: .25em
+  //   background: blue
+  //   transform: rotateY(90deg) translate3d(.25em, 0, .25em)
 
 .player.up::after
   background: #33291f

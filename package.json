@@ -9,7 +9,8 @@
     "server:express": "node servers/express",
     "build": "webpack --env.production -p ",
     "test": "wdio wdio.conf.js --format-options",
-    "test:dev": "wdio wdio.conf.js --watch"
+    "test:dev": "wdio wdio.conf.js --watch",
+    "start:fast": "webpack-dev-server --progress --env.waitTime=2 --env.fps=300"
   },
   "devDependencies": {
     "babel-core": "6.26.0",
@@ -26,6 +27,7 @@
     "postcss-for": "2.1.1",
     "postcss-import": "10.0.0",
     "postcss-loader": "2.0.6",
+    "postcss-nested": "2.1.2",
     "style-loader": "0.18.2",
     "sugarss": "1.0.0",
     "wdio-cucumber-framework": "^1.0.2",

@@ -1,37 +1,87 @@
 port module Server.Update exposing (..)
 
-import Server.Model exposing(Model)
-import Server.Message exposing (Msg(PlayerAction))
+import Common.Players.Main as Players exposing (Action)
+import Common.World.Main as World
+import Common.World.Tile as Tile
+import Process exposing (Id)
+import Server.Message exposing (Msg(..))
+import Server.Model exposing (Model, UntilStart(Seconds, WaitForPlayers))
+import Task
+import Time exposing (Time)
+
+
 -- import Common.Players.Model exposing (updatePlayer)
+
 
 port broadcast : String -> Cmd msg
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
- case msg of
-    PlayerAction (index, action) ->
-      let
-        -- Connected: 0,
-        -- Disconnected: 1,
-        -- Up: 2,
-        -- Right: 3,
-        -- Down: 4,
-        -- Left: 5,
-        -- Bomb: 6,
-        -- Error: 7,
+port requestServer : Int -> Cmd msg
 
-        _ = case action of
-          0 -> Debug.log "Connected" index
-          1 -> Debug.log "Disconnected" index
-          2 -> Debug.log "Up" index
-          3 -> Debug.log "Right" index
-          4 -> Debug.log "Down" index
-          5 -> Debug.log "Left" index
-          6 -> Debug.log "Bomb" index
-          e -> Debug.log "Got Error"  e
-      in
-      case action of
-        -- 0 -> ({model | players = updatePlayer model.players (index, action)}, Cmd.none)
-        -- 1 -> ({model | players = updatePlayer model.players (index, action)}, Cmd.none)
-        _ -> (model, Cmd.none)
+
+countDown : Int -> Cmd Msg
+countDown t =
+    if t >= 0 then
+        Process.sleep (1 * Time.second) |> Task.perform (\_ -> CountDown t)
+    else
+        Cmd.none
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg ({ world } as model) =
+    let
+        defaultUpdate message =
+            ( { model | world = World.withUpdatedPlayer world message }, Cmd.none )
+
+        collision message =
+            if World.collision world message then
+                ( model, Cmd.none )
+            else
+                defaultUpdate message
+
+        placeBomb message =
+            let
+                ref =
+                    Players.playerRefByMessage message
+            in
+            case World.placeBomb world ref of
+                Just { world, bomb, explosionIn } ->
+                    ( { model
+                        | world = world
+                      }
+                    , Process.sleep (explosionIn * Time.second) |> Task.perform (\_ -> BombExplosion bomb)
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
+    in
+    case msg of
+        PlayerCount c ->
+            ( { model | untilStart = WaitForPlayers }, requestServer c )
+
+        CountDown t ->
+            ( { model | untilStart = Seconds t }, countDown (t - 1) )
+
+        BombExplosion bomb ->
+            case Tile.bomb2info bomb of
+                -- TODO make me cleaner
+                Just info ->
+                    { model | world = World.boom world info }
+                        ! [ Cmd.none ]
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        PlayerAction message ->
+            case ( Players.action message, model.untilStart ) of
+                ( Players.Connected, WaitForPlayers ) ->
+                    ( { model | world = World.withUpdatedPlayer world message }, countDown model.waitTime )
+
+                ( Players.Move _, Seconds 0 ) ->
+                    collision message
+
+                ( Players.Bomb, _ ) ->
+                    placeBomb message
+
+                _ ->
+                    defaultUpdate message

@@ -1,9 +1,11 @@
 module Server.Message exposing (..)
 
--- import Keyboard exposing (KeyCode)
--- import Time exposing (Time)
+import Common.Players.Main exposing (Message)
+import Common.World.Tile exposing (Item)
 
--- type Action = Connected | Disconnected | Up | Right | Down | Left | Bomb | Error
--- type alias Index = Int
 
-type Msg = PlayerAction (Int, Int)
+type Msg
+    = PlayerAction Message
+    | PlayerCount Int
+    | CountDown Int
+    | BombExplosion Item
