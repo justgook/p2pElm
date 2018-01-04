@@ -1,32 +1,36 @@
 module Server.Model exposing (..)
 
 import Common.World.Main as World exposing (World)
-import Server.Message exposing (Msg)
+
+
+-- import Server.Update exposing (Msg)
 
 
 type UntilStart
     = Seconds Int
-    | NotSet
-    | WaitForPlayers
+    | WaitForOpponent
 
 
 type alias Model =
-    { world : World
+    { world : Maybe World
     , untilStart : UntilStart
     , waitTime : Int
+    , rooms : List String
     , fps : Int
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( model, Cmd.none )
+
+-- init : ( Model, Cmd Msg )
+-- init =
+--     ( model, Cmd.none )
 
 
 model : Model
 model =
-    { world = World.init
-    , untilStart = NotSet
+    { world = Nothing
+    , rooms = []
+    , untilStart = WaitForOpponent
     , waitTime = 0
     , fps = 0
     }

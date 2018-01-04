@@ -10,7 +10,7 @@
     "build": "webpack --env.production -p ",
     "test": "wdio wdio.conf.js --format-options",
     "test:dev": "wdio wdio.conf.js --watch",
-    "start:fast": "webpack-dev-server --progress --env.waitTime=2 --env.fps=300"
+    "start:fast": "webpack-dev-server --progress --env.waitTime=1 --env.fps=300"
   },
   "devDependencies": {
     "babel-core": "6.26.0",

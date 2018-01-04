@@ -1,28 +1,22 @@
 module Common.World.Main
     exposing
         ( World
-        , addItem
-        , bombReturn
-        , boom
-        , collision
+          -- , bombReturn
         , decode
-        , encode
         , init
         , nextItemId
-        , placeBomb
         , players
-        , removeItem
-        , view
-        , walls
-        , withUpdatedPlayer
+        , setPlayers
+        , setTiles
+        , tiles
         )
 
-import Common.Players.Main as Players exposing (Direction(..), Player, PlayerRef, Players, playerByRef)
+-- import Common.Players.Message exposing (Direction(..), PlayerRef)
+
+import Common.Players.Main as Players exposing (Player, Players, playerByRef)
 import Common.Point exposing (Point(Point))
-import Common.World.Tile as Tile exposing (Item)
-import Html exposing (Html, div, li, text, ul)
-import Html.Attributes exposing (class, classList, style)
-import List exposing ((::), concat, filterMap, foldr, map, member)
+import Common.World.TileSet as TileSet exposing (Item, TileSet)
+import List exposing (concat, filterMap, foldr, map, member)
 import String exposing (split, toInt, toList)
 
 
@@ -39,7 +33,7 @@ type alias Height =
 
 
 type World
-    = World Width Height (List Item) Players
+    = World Width Height TileSet Players
 
 
 init : World
@@ -61,31 +55,14 @@ decode tiles =
             |> Maybe.withDefault 0
         )
         (List.length rows)
-        (concat rows)
+        (TileSet.add (concat rows) TileSet.empty)
         players
 
 
-encode : World -> String
-encode tiles =
-    "test"
 
-
-view : World -> Html msg
-view world =
-    let
-        ( w, h ) =
-            size world
-    in
-    walls world
-        |> map Tile.view
-        |> List.append (map (\x -> Tile.player x.point x.direction) <| Players.tiles <| players world)
-        |> div
-            [ class "tiles"
-            , style
-                [ ( "width", toString w ++ "em" )
-                , ( "height", toString h ++ "em" )
-                ]
-            ]
+-- encode : World -> String
+-- encode tiles =
+--     "test"
 
 
 size : World -> ( Width, Height )
@@ -98,24 +75,14 @@ nextItemId (World _ _ items _) =
     List.length items
 
 
-addItem : World -> Item -> World
-addItem ((World w h items p) as world) item =
-    World w h (items ++ [ item ]) p
-
-
-removeItem : World -> Item -> World
-removeItem (World w h items p) item =
-    World w h (List.filter (\i -> i /= item) items) p
-
-
-walls : World -> List Item
-walls (World _ _ items _) =
-    items
-
-
 players : World -> Players
 players (World _ _ _ players) =
     players
+
+
+tiles : World -> TileSet
+tiles (World _ _ items _) =
+    items
 
 
 setPlayers : Players -> World -> World
@@ -123,73 +90,129 @@ setPlayers p (World w h items _) =
     World w h items p
 
 
-collision : World -> Players.Message -> Bool
-collision ((World _ _ _ players) as world) message =
-    let
-        detection tile =
-            let
-                ( Point pX pY, Point tX tY ) =
-                    ( Players.newPosition players message, Tile.position tile )
-            in
-            ( pX, pY ) == ( tX, tY )
-    in
-    walls world
-        |> List.any detection
+setTiles : TileSet -> World -> World
+setTiles tiles (World w h _ p) =
+    World w h tiles p
 
 
 
 --TODO split file by server / client / common specific stuff
+-- bombReturn : PlayerRef -> World -> World
+-- bombReturn ref ((World _ _ _ players) as world) =
+--     setPlayers (Players.bombReturn players ref) world
+-- placeBomb : World -> PlayerRef -> Maybe { world : World, bomb : Item, explosionIn : Float }
+-- placeBomb ((World w h items players) as world) ref =
+--     case Players.placeBomb players ref of
+--         Nothing ->
+--             Nothing
+--         Just ( p, { point, explosionTime, explosionSize } ) ->
+--             let
+--                 bomb =
+--                     Tile.createBomb point explosionSize explosionTime ref
+--             in
+--             Just
+--                 { world =
+--                     addItem bomb world
+--                         |> setPlayers p
+--                 , bomb = bomb
+--                 , explosionIn = explosionTime
+--                 }
+{--EXPLOSION START--}
 
 
-bombReturn : PlayerRef -> World -> World
-bombReturn ref ((World _ _ _ players) as world) =
-    setPlayers (Players.bombReturn players ref) world
+explosionStreamUpdater1 : Point -> Point
+explosionStreamUpdater1 (Point x y) =
+    Point (x + 1) y
 
 
-placeBomb : World -> PlayerRef -> Maybe { world : World, bomb : Item, explosionIn : Float }
-placeBomb ((World w h items players) as world) ref =
-    case Players.placeBomb players ref of
-        Nothing ->
-            Nothing
+explosionStreamUpdater2 : Point -> Point
+explosionStreamUpdater2 (Point x y) =
+    Point (x - 1) y
 
-        Just ( p, { point, explosionTime, explosionSize } ) ->
-            let
-                bomb =
-                    Tile.createBomb point explosionSize explosionTime ref
-            in
-            Just
-                { world =
-                    addItem world bomb
-                        |> setPlayers p
-                , bomb = bomb
-                , explosionIn = explosionTime
-                }
+
+explosionStreamUpdater3 : Point -> Point
+explosionStreamUpdater3 (Point x y) =
+    Point x (y + 1)
+
+
+explosionStreamUpdater4 : Point -> Point
+explosionStreamUpdater4 (Point x y) =
+    Point x (y - 1)
 
 
 
--- TODO MOVE TO server sub-file
+-- itemsByPoint
+-- delme =
+--     Debug.log "delme" <| explosionStream (\(Point x y) -> True) explosionStreamUpdater4 (Point 3 3) 3 []
 
 
-boom : World -> Tile.BombInfo -> World
-boom world info =
-    Tile.info2bomb info
-        |> removeItem world
-        |> bombReturn (Tile.bombInfoOwner info)
+explosionStream : (Point -> Bool) -> (Point -> Point) -> Point -> Int -> List Point -> List Point
+explosionStream canGoForward updater point s accumulator =
+    let
+        newPoint =
+            updater point
+
+        test =
+            newPoint
+                :: (if s > 1 && canGoForward newPoint then
+                        accumulator ++ explosionStream canGoForward updater newPoint (s - 1) accumulator
+                    else
+                        accumulator
+                   )
+    in
+    test
 
 
-withUpdatedPlayer : World -> Players.Message -> World
-withUpdatedPlayer (World w h walls players) message =
-    World w h walls (Players.updatePlayers players message)
+
+-- collideWith:TileSet-> Point -> Maybe Item
+-- collideWith tiles point =
+-- boom2 : TileSet -> Players -> Tile.BombInfo -> ( List Item, List Item, List ( Float, Item ) )
+-- boom2 tiles players info =
+--     let
+--         explosionAnimationTime =
+--             0.3
+--         itemsToAdd =
+--             []
+--         itemsToRemove =
+--             []
+--         dalayItemsToRemove =
+--             []
+--         -- [(explosionAnimationTime)]
+--     in
+--     ( itemsToAdd, itemsToRemove, dalayItemsToRemove )
+-- explosionFolder : Point -> (Int -> List Item -> List Item)
+-- explosionFolder (Point x y) s result =
+--     -- TODO update me to recustion
+--     -- TODO convert Explosion to Set ...
+--     (y + s |> Point x >> flip Tile.createExplosion [])
+--         :: (y - s |> Point x >> flip Tile.createExplosion [])
+--         :: (x + s |> flip Point y >> flip Tile.createExplosion [])
+--         :: (x - s |> flip Point y >> flip Tile.createExplosion [])
+--         :: result
+-- boom : World -> Tile.BombInfo -> World
+-- boom world info =
+--     -- let
+--     --     expls =
+--     --         Tile.bombInfoSize info
+--     --             |> List.range 1
+--     --             |> List.foldr (Tile.bombPossition info |> explosionFolder) []
+--     -- in
+--     -- Tile.info2bomb info
+--     --     -- |> removeItem world
+--     --     |> addItems expls
+--     --     |> bombReturn (Tile.bombInfoOwner info)
+--     world
+{--EXPLOSION END--}
 
 
-repeaterWithPlayer : Players -> Int -> Int -> Int -> Char -> ( Int, List Item, Players )
+repeaterWithPlayer : Players -> Int -> Int -> Int -> Char -> ( Int, TileSet, Players )
 repeaterWithPlayer players startX y n itemChar =
     case itemChar of
         ' ' ->
             ( startX + n, [], players )
 
         '@' ->
-            ( startX + n, [], Players.add players (Point startX y) )
+            ( startX + n, [], Players.add (Point startX y) players )
 
         -- TODO Parse for multiple players in row (or test test at least for that)
         _ ->
@@ -198,7 +221,7 @@ repeaterWithPlayer players startX y n itemChar =
                 + n
                 - 1
                 |> List.range startX
-                |> map (\n -> Tile.parse itemChar n y)
+                |> map (\n -> TileSet.parse itemChar n y)
             , players
             )
 
@@ -212,13 +235,18 @@ mapSecond2 func ( x, y, z ) =
     ( x, func y, z )
 
 
+allowedCharacters : List Char
+allowedCharacters =
+    [ '@', '$', '#', ' ' ]
+
+
 parseRowPlayers : Players -> Int -> String -> List Item -> Int -> List Char -> ( List Item, Players )
 parseRowPlayers players x multiplier result y data =
     case List.head data of
         Just a ->
             let
                 ( newX, newResult, newPlayers ) =
-                    if member a Tile.allowed then
+                    if member a allowedCharacters then
                         case String.toInt multiplier of
                             Ok 0 ->
                                 repeaterWithPlayer players x y 1 a |> mapSecond2 (\x -> result ++ x)
@@ -232,7 +260,7 @@ parseRowPlayers players x multiplier result y data =
                         ( x, result, players )
 
                 newMultiplier =
-                    if member a Tile.allowed then
+                    if member a allowedCharacters then
                         "0"
                     else
                         multiplier ++ String.fromChar a

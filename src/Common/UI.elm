@@ -1,4 +1,4 @@
-module Common.UI exposing (countDown, playerCount, waitForPlayers)
+module Common.UI exposing (countDown, level, waitForPlayers)
 
 import Common.Players.Main exposing (Player, Players, Status(..), status)
 import Html exposing (Html, div, input, text)
@@ -7,10 +7,10 @@ import Html.Events exposing (onClick, onInput)
 import List exposing (append, map, range)
 
 
-playerCount : (Int -> msg) -> Html msg
-playerCount msg =
+level : (Int -> msg) -> Int -> Html msg
+level msg count =
     div [ class "ui-overlay" ]
-        [ range 1 8
+        [ range 1 count
             |> map (\x -> div [ class "menu-item", onClick (msg x) ] [ div [] [] ])
             |> (\x -> List.append x [ div [ class "menu-title" ] [] ])
             -- Ugly - change to something witout lamda function
@@ -32,6 +32,9 @@ waitingItem player =
 
                 Available ->
                     "waiting"
+
+                Dead ->
+                    "dead"
         ]
         []
 

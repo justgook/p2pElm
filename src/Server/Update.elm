@@ -1,11 +1,15 @@
 port module Server.Update exposing (..)
 
-import Common.Players.Main as Players exposing (Action)
-import Common.World.Main as World
-import Common.World.Tile as Tile
+-- import Common.World.Tile as Tile exposing (Item)
+-- import Common.Point exposing (Point(Point))
+
+import Common.Players.Main as Players
+import Common.Players.Message as Message exposing (Action(..), Message)
+import Common.World.Main as World exposing (World)
+import Common.World.TileSet as TileSet exposing (BombInfo(BombInfo), Item)
 import Process exposing (Id)
-import Server.Message exposing (Msg(..))
-import Server.Model exposing (Model, UntilStart(Seconds, WaitForPlayers))
+import Server.Model exposing (Model, UntilStart(Seconds, WaitForOpponent))
+import Server.Update.NoLevel as NoLevel
 import Task
 import Time exposing (Time)
 
@@ -19,6 +23,14 @@ port broadcast : String -> Cmd msg
 port requestServer : Int -> Cmd msg
 
 
+type Msg
+    = PlayerAction Message
+    | CountDown Int
+    | BombExplosion Item
+    | RemoveItem Item
+    | NoLevel NoLevel.Msg
+
+
 countDown : Int -> Cmd Msg
 countDown t =
     if t >= 0 then
@@ -27,61 +39,173 @@ countDown t =
         Cmd.none
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg ({ world } as model) =
-    let
-        defaultUpdate message =
-            ( { model | world = World.withUpdatedPlayer world message }, Cmd.none )
+playersUpdate : Message -> World -> World
+playersUpdate msg world =
+    -- TODO update functions to use it witout flip
+    World.players world
+        |> flip Players.updatePlayers msg
+        |> flip World.setPlayers world
 
-        collision message =
-            if World.collision world message then
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update income model =
+    let
+        defaultUpdate msg world =
+            ( { model
+                | world = playersUpdate msg world |> Just
+              }
+            , Cmd.none
+            )
+
+        collision msg world =
+            if TileSet.collision (World.tiles world) (Players.newPosition (World.players world) msg) then
                 ( model, Cmd.none )
             else
-                defaultUpdate message
+                defaultUpdate msg world
 
-        placeBomb message =
+        placeBomb message world =
             let
+                players =
+                    World.players world
+
                 ref =
-                    Players.playerRefByMessage message
-            in
-            case World.placeBomb world ref of
-                Just { world, bomb, explosionIn } ->
+                    Message.ref message
+
+                player =
+                    Players.playerByMessage message players
+
+                maybePlayer =
+                    Players.decreaseBombCount player
+
+                result =
+                    maybePlayer
+                        |> Maybe.map resultReturner
+                        |> Maybe.withDefault ( model, Cmd.none )
+
+                resultReturner gotPlayer =
+                    let
+                        tiles =
+                            World.tiles world
+
+                        speed =
+                            Players.bombsTime player
+
+                        bomb =
+                            TileSet.bomb
+                                (BombInfo
+                                    { point = Players.possition player
+                                    , speed = speed
+                                    , size = Players.bombsSize player
+                                    , owner = ref
+                                    }
+                                )
+
+                        tilesWithNewBomb =
+                            TileSet.add [ bomb ] tiles
+
+                        newPlayers =
+                            Players.set gotPlayer players
+
+                        newWorld =
+                            World.setPlayers newPlayers world
+                                |> World.setTiles tilesWithNewBomb
+                    in
                     ( { model
-                        | world = world
+                        | world = Just newWorld
                       }
-                    , Process.sleep (explosionIn * Time.second) |> Task.perform (\_ -> BombExplosion bomb)
+                    , Process.sleep (speed * Time.second) |> Task.perform (\_ -> BombExplosion bomb)
                     )
-
-                Nothing ->
-                    ( model, Cmd.none )
+            in
+            result
     in
-    case msg of
-        PlayerCount c ->
-            ( { model | untilStart = WaitForPlayers }, requestServer c )
+    case ( income, model.world ) of
+        ( NoLevel msg, Nothing ) ->
+            let
+                world =
+                    NoLevel.update msg model.rooms
 
-        CountDown t ->
+                cmd =
+                    world
+                        |> Maybe.map (requestServer << Players.count << World.players)
+                        |> Maybe.withDefault Cmd.none
+            in
+            ( { model | world = world }, cmd )
+
+        ( CountDown t, Just world ) ->
             ( { model | untilStart = Seconds t }, countDown (t - 1) )
 
-        BombExplosion bomb ->
-            case Tile.bomb2info bomb of
-                -- TODO make me cleaner
-                Just info ->
-                    { model | world = World.boom world info }
-                        ! [ Cmd.none ]
+        ( RemoveItem item, Just world ) ->
+            let
+                newTiles =
+                    World.tiles world
+                        |> TileSet.remove [ item ]
 
-                Nothing ->
-                    ( model, Cmd.none )
+                newWorld =
+                    world
+                        |> World.setTiles newTiles
+            in
+            { model
+                | world = Just newWorld
+            }
+                ! [ Cmd.none ]
 
-        PlayerAction message ->
-            case ( Players.action message, model.untilStart ) of
-                ( Players.Connected, WaitForPlayers ) ->
-                    ( { model | world = World.withUpdatedPlayer world message }, countDown model.waitTime )
+        ( BombExplosion bomb, Just world ) ->
+            let
+                players =
+                    World.players world
 
-                ( Players.Move _, Seconds 0 ) ->
-                    collision message
+                tiles =
+                    World.tiles world
 
-                ( Players.Bomb, _ ) ->
-                    placeBomb message
+                ( addItems, removeItems, dalayItemsToRemove, deadPlayers, bombsReturns ) =
+                    TileSet.explosion bomb (Players.livePlayersDict players) tiles
+
+                playersWithBombsReturned =
+                    bombsReturns
+                        |> List.map (flip Players.playerByRef players >> Players.increaseBombCount)
+                        |> List.foldl Players.set players
+
+                playersWithDeath =
+                    deadPlayers
+                        |> List.map (flip Players.playerByRef playersWithBombsReturned >> Players.die)
+                        |> List.foldl Players.set playersWithBombsReturned
+
+                newTiles =
+                    tiles
+                        |> TileSet.remove removeItems
+                        |> TileSet.add addItems
+
+                newWorld =
+                    world
+                        |> World.setPlayers playersWithDeath
+                        |> World.setTiles newTiles
+
+                cmds =
+                    dalayItemsToRemove
+                        |> List.map (\( t, item ) -> Process.sleep (t * Time.second) |> Task.perform (\_ -> RemoveItem item))
+            in
+            { model
+                | world = Just newWorld
+            }
+                ! cmds
+
+        ( PlayerAction msg, Just world ) ->
+            case ( Message.action msg, model.untilStart ) of
+                ( Message.Connected, WaitForOpponent ) ->
+                    ( { model | world = playersUpdate msg world |> Just }, countDown model.waitTime )
+
+                ( Message.Move _, Seconds 0 ) ->
+                    collision msg world
+
+                ( Message.Bomb, _ ) ->
+                    placeBomb msg world
 
                 _ ->
-                    defaultUpdate message
+                    ( { model
+                        | world = playersUpdate msg world |> Just
+                      }
+                    , Cmd.none
+                    )
+
+        _ ->
+            ( model, Cmd.none )

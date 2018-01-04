@@ -1,88 +1,33 @@
 module Common.Players.Main
     exposing
-        ( Action(..)
-        , Direction(..)
-        , Message
+        ( LivePlayersDict
         , Player
-        , PlayerRef
         , Players
         , Status(..)
-        , action
         , add
-        , bombReturn
+          -- , bombReturn
+        , bombsSize
+          -- , placeBomb
         , bombsTime
+        , count
+        , decreaseBombCount
+        , die
         , empty
-        , incomeToMessage
-        , movePlayer
+        , increaseBombCount
+        , livePlayersDict
         , newPosition
-        , placeBomb
-          -- , playerByMessage
+        , playerByMessage
         , playerByRef
-        , playerRefByMessage
         , possition
+        , set
         , status
         , tiles
         , updatePlayers
         )
 
+import Common.Players.Message as Message exposing (Action(..), Direction(..), Message, PlayerRef(PlayerRef), action)
 import Common.Point exposing (Point(Point))
-
-
-type Action
-    = Connected
-    | Disconnected
-    | Move Direction
-    | Bomb
-    | Error
-
-
-action : Message -> Action
-action (Message { action }) =
-    action
-
-
-int2action : Int -> Action
-int2action i =
-    case i of
-        0 ->
-            Connected
-
-        1 ->
-            Disconnected
-
-        2 ->
-            Move North
-
-        3 ->
-            Move East
-
-        4 ->
-            Move South
-
-        5 ->
-            Move West
-
-        6 ->
-            Bomb
-
-        _ ->
-            Error
-
-
-type Message
-    = Message { ref : PlayerRef, action : Action }
-
-
-incomeToMessage : ( Int, Int ) -> Message
-incomeToMessage ( pIndex, action ) =
-    Message { ref = PlayerRef { index = pIndex }, action = int2action action }
-
-
-type Direction
-    = North
-    | East
-    | South
-    | West
+import Dict exposing (Dict)
 
 
 type Bombs
@@ -93,6 +38,7 @@ type Status
     = Online
     | NotAvailable
     | Available
+    | Dead
 
 
 type Player
@@ -104,10 +50,6 @@ type Player
         , speed : Int
         , index : Int
         }
-
-
-type PlayerRef
-    = PlayerRef { index : Int }
 
 
 status : Player -> Status
@@ -123,69 +65,45 @@ possition (Player { possition }) =
 bombsTime : Player -> Float
 bombsTime (Player { bombs }) =
     let
-        (Bombs { left, explosionTime }) =
+        (Bombs { explosionTime }) =
             bombs
     in
     explosionTime
 
 
-
--- TODO move to Players.Server part
-
-
-bombReturn : Players -> PlayerRef -> Players
-bombReturn players ref =
+bombsSize : Player -> Int
+bombsSize (Player { bombs }) =
     let
-        (Bombs { left, explosionTime, explosionSize }) =
-            bombs
-
-        (Player { status, bombs, speed, possition, index, direction }) =
-            playerByRef players ref
-    in
-    players
-        |> replacePlayer ref
-            (Player
-                { status = status
-                , direction = direction
-                , bombs = Bombs { left = left + 1, explosionTime = explosionTime, explosionSize = explosionSize }
-                , speed = speed
-                , possition = possition
-                , index = index
-                }
-            )
-
-
-placeBomb : Players -> PlayerRef -> Maybe ( Players, { point : Point, explosionTime : Float, explosionSize : Int } )
-placeBomb players ref =
-    let
-        (Player { status, direction, bombs, speed, possition, index }) =
-            playerByRef players ref
-
-        (Bombs { left, explosionTime, explosionSize }) =
+        (Bombs { explosionSize }) =
             bombs
     in
-    case left of
-        0 ->
-            Nothing
+    explosionSize
 
-        _ ->
-            let
-                newPlayer =
-                    Player
-                        { status = status
-                        , direction = direction
-                        , bombs = Bombs { left = left - 1, explosionTime = explosionTime, explosionSize = explosionSize }
-                        , speed = speed
-                        , possition = possition
-                        , index = index
-                        }
-            in
-            Just ( replacePlayer ref newPlayer players, { point = possition, explosionTime = explosionTime, explosionSize = explosionSize } )
+
+increaseBombCount : Player -> Player
+increaseBombCount (Player player) =
+    let
+        (Bombs ({ left, explosionTime } as bombs)) =
+            player.bombs
+    in
+    Player { player | bombs = Bombs { bombs | left = left + 1 } }
+
+
+decreaseBombCount : Player -> Maybe Player
+decreaseBombCount (Player player) =
+    let
+        (Bombs ({ left, explosionTime } as bombs)) =
+            player.bombs
+    in
+    if left > 0 then
+        Just <| Player { player | bombs = Bombs { bombs | left = left - 1 } }
+    else
+        Nothing
 
 
 possitionByMessage : Players -> Message -> Point
 possitionByMessage pls msg =
-    playerByMessage pls msg |> possition
+    playerByMessage msg pls |> possition
 
 
 type alias Players =
@@ -200,49 +118,22 @@ type alias Players =
     }
 
 
-playerRefByMessage : Message -> PlayerRef
-playerRefByMessage (Message { ref }) =
-    ref
+type alias LivePlayersDict =
+    Dict ( Int, Int ) PlayerRef
 
 
-playerByMessage : Players -> Message -> Player
-playerByMessage p (Message { ref }) =
-    playerByRef p ref
+livePlayersDict : Players -> LivePlayersDict
+livePlayersDict p =
+    Dict.fromList [ ( ( 1, 1 ), PlayerRef { index = 1 } ) ]
 
 
-replacePlayer : PlayerRef -> Player -> Players -> Players
-replacePlayer (PlayerRef { index }) newPlayer players =
-    case index of
-        0 ->
-            { players | p1 = newPlayer }
-
-        1 ->
-            { players | p2 = newPlayer }
-
-        2 ->
-            { players | p3 = newPlayer }
-
-        3 ->
-            { players | p4 = newPlayer }
-
-        4 ->
-            { players | p5 = newPlayer }
-
-        5 ->
-            { players | p6 = newPlayer }
-
-        6 ->
-            { players | p7 = newPlayer }
-
-        7 ->
-            { players | p8 = newPlayer }
-
-        _ ->
-            players
+playerByMessage : Message -> Players -> Player
+playerByMessage msg p =
+    playerByRef (Message.ref msg) p
 
 
-playerByRef : Players -> PlayerRef -> Player
-playerByRef { p1, p2, p3, p4, p5, p6, p7, p8 } (PlayerRef { index }) =
+playerByRef : PlayerRef -> Players -> Player
+playerByRef (PlayerRef { index }) { p1, p2, p3, p4, p5, p6, p7, p8 } =
     case index of
         0 ->
             p1
@@ -272,8 +163,8 @@ playerByRef { p1, p2, p3, p4, p5, p6, p7, p8 } (PlayerRef { index }) =
             p1
 
 
-add : Players -> Point -> Players
-add ({ p1, p2, p3, p4, p5, p6, p7, p8 } as players) point =
+add : Point -> Players -> Players
+add point ({ p1, p2, p3, p4, p5, p6, p7, p8 } as players) =
     if statusNotAvailable p1 then
         { players | p1 = createPlayer p1 point }
     else if statusNotAvailable p2 then
@@ -292,6 +183,64 @@ add ({ p1, p2, p3, p4, p5, p6, p7, p8 } as players) point =
         { players | p8 = createPlayer p8 point }
     else
         players
+
+
+die : Player -> Player
+die p =
+    p
+
+
+set : Player -> Players -> Players
+set ((Player { index }) as p) players =
+    case index of
+        0 ->
+            { players | p1 = p }
+
+        1 ->
+            { players | p2 = p }
+
+        2 ->
+            { players | p3 = p }
+
+        3 ->
+            { players | p4 = p }
+
+        4 ->
+            { players | p5 = p }
+
+        5 ->
+            { players | p6 = p }
+
+        6 ->
+            { players | p7 = p }
+
+        7 ->
+            { players | p8 = p }
+
+        _ ->
+            players
+
+
+count : Players -> Int
+count { p1, p2, p3, p4, p5, p6, p7, p8 } =
+    if statusNotAvailable p1 then
+        0
+    else if statusNotAvailable p2 then
+        1
+    else if statusNotAvailable p3 then
+        2
+    else if statusNotAvailable p4 then
+        3
+    else if statusNotAvailable p5 then
+        4
+    else if statusNotAvailable p6 then
+        5
+    else if statusNotAvailable p7 then
+        6
+    else if statusNotAvailable p8 then
+        7
+    else
+        8
 
 
 tiles : Players -> List { point : Point, direction : Direction, id : Int }
@@ -314,7 +263,7 @@ empty =
                 { index = i
                 , direction = North
                 , status = NotAvailable
-                , bombs = Bombs { left = 3, explosionTime = 3, explosionSize = 1 }
+                , bombs = Bombs { left = 3, explosionTime = 3, explosionSize = 3 }
                 , speed = 10
                 , possition = Point 0 0
                 }
@@ -361,13 +310,13 @@ createPlayer (Player { bombs, speed, index, direction }) p =
 
 
 updatePlayers : Players -> Message -> Players
-updatePlayers players (Message { ref, action }) =
+updatePlayers players msg =
     let
         update =
-            \p -> playerUpdater (p players) action
+            \p -> playerUpdater (p players) (Message.action msg)
 
         (PlayerRef { index }) =
-            ref
+            Message.ref msg
     in
     case index of
         0 ->
@@ -399,40 +348,46 @@ updatePlayers players (Message { ref, action }) =
 
 
 newPosition : Players -> Message -> Point
-newPosition players ((Message { action }) as m) =
-    action
-        |> playerUpdater (playerByMessage players m)
+newPosition players m =
+    let
+        action =
+            Message.action m
+
+        player =
+            playerByMessage m players
+    in
+    playerUpdater player action
         |> possition
 
 
 movePlayer : Player -> Direction -> Player
-movePlayer ((Player { bombs, speed, status, possition, index }) as player) dir =
+movePlayer (Player ({ possition } as player)) dir =
     let
         (Point x y) =
             possition
     in
     case dir of
         North ->
-            Player { index = index, direction = dir, status = status, bombs = bombs, speed = speed, possition = Point x (y - 1) }
+            Player { player | direction = dir, possition = Point x (y - 1) }
 
         East ->
-            Player { index = index, direction = dir, status = status, bombs = bombs, speed = speed, possition = Point (x + 1) y }
+            Player { player | direction = dir, possition = Point (x + 1) y }
 
         South ->
-            Player { index = index, direction = dir, status = status, bombs = bombs, speed = speed, possition = Point x (y + 1) }
+            Player { player | direction = dir, possition = Point x (y + 1) }
 
         West ->
-            Player { index = index, direction = dir, status = status, bombs = bombs, speed = speed, possition = Point (x - 1) y }
+            Player { player | direction = dir, possition = Point (x - 1) y }
 
 
 playerUpdater : Player -> Action -> Player
-playerUpdater ((Player { bombs, speed, status, possition, index, direction }) as player) action =
+playerUpdater ((Player ({ status } as data)) as player) action =
     case action of
         Connected ->
-            Player { index = index, direction = direction, status = Online, bombs = bombs, speed = speed, possition = possition }
+            Player { data | status = Online }
 
         Disconnected ->
-            Player { index = index, direction = direction, status = Available, bombs = bombs, speed = speed, possition = possition }
+            Player { data | status = Available }
 
         Move d ->
             movePlayer player d

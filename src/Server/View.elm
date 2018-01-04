@@ -6,32 +6,52 @@ module Server.View exposing (..)
 import Common.Background as Background
 import Common.UI as UI
 import Common.World.Main as World
+import Common.World.View as World
 import Html exposing (Html, div, li, text, ul)
 import Html.Attributes exposing (class)
-import Server.Message exposing (Msg(PlayerCount))
 import Server.Model exposing (Model)
+import Server.Update exposing (Msg(NoLevel))
+import Server.Update.NoLevel as NoLevel
 
 
 -- http://elm-lang.org/blog/blazing-fast-html-round-two - ADD lazy (if needed)
 
 
 view : Model -> Html Msg
-view ({ untilStart, world } as model) =
-    div [ class "main-wrapper" ]
-        ([ Background.view
-         ]
-            ++ (case untilStart of
-                    Server.Model.NotSet ->
-                        [ UI.playerCount PlayerCount ]
+view model =
+    (case ( model.world, model.untilStart ) of
+        ( Just world, Server.Model.Seconds 0 ) ->
+            [ World.view (World.tiles world) (World.players world) ]
 
-                    Server.Model.WaitForPlayers ->
-                        [ World.players world |> UI.waitForPlayers ]
+        ( Just world, Server.Model.Seconds s ) ->
+            [ World.players world |> UI.waitForPlayers, UI.countDown s ]
 
-                    Server.Model.Seconds 0 ->
-                        [ World.view world ]
+        ( Just world, _ ) ->
+            [ World.players world |> UI.waitForPlayers ]
 
-                    Server.Model.Seconds s ->
-                        [ World.players world |> UI.waitForPlayers, UI.countDown s ]
-               )
-         -- _ -> []
-        )
+        -- ( Nothing, _ ) ->
+        _ ->
+            List.length model.rooms
+                |> UI.level (NoLevel << NoLevel.Level)
+                |> List.singleton
+    )
+        |> (::) Background.view
+        |> div [ class "main-wrapper" ]
+
+
+
+-- |>  div [ class "main-wrapper" ]
+-- |> (++) (case world of
+--     Just w -> []
+--     Nothing -> [])
+-- ++ (case untilStart of
+--         Server.Model.NotSet ->
+--             [ UI.playerCount PlayerCount ]
+--         Server.Model.WaitForPlayers ->
+--             [ World.players world |> UI.waitForPlayers ]
+--         Server.Model.Seconds 0 ->
+--             [ World.view world ]
+--         Server.Model.Seconds s ->
+--             [ World.players world |> UI.waitForPlayers, UI.countDown s ]
+--    )
+-- _ -> []
