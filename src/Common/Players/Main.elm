@@ -14,6 +14,7 @@ module Common.Players.Main
         , die
         , empty
         , increaseBombCount
+        , isLive
         , livePlayersDict
         , newPosition
         , playerByMessage
@@ -123,8 +124,31 @@ type alias LivePlayersDict =
 
 
 livePlayersDict : Players -> LivePlayersDict
-livePlayersDict p =
-    Dict.fromList [ ( ( 1, 1 ), PlayerRef { index = 1 } ) ]
+livePlayersDict ({ p1, p2, p3, p4, p5, p6, p7, p8 } as players) =
+    []
+        |> livePlayerTuple p1
+        |> livePlayerTuple p2
+        |> livePlayerTuple p3
+        |> livePlayerTuple p4
+        |> livePlayerTuple p5
+        |> livePlayerTuple p6
+        |> livePlayerTuple p7
+        |> livePlayerTuple p8
+        |> Dict.fromList
+
+
+livePlayerTuple : Player -> List ( ( Int, Int ), PlayerRef ) -> List ( ( Int, Int ), PlayerRef )
+livePlayerTuple (Player { possition, index, status }) =
+    let
+        (Point x y) =
+            possition
+    in
+    addIf (status == Online) ( ( x, y ), PlayerRef { index = index } )
+
+
+isLive : Player -> Bool
+isLive (Player { status }) =
+    status == Online
 
 
 playerByMessage : Message -> Players -> Player
@@ -186,8 +210,8 @@ add point ({ p1, p2, p3, p4, p5, p6, p7, p8 } as players) =
 
 
 die : Player -> Player
-die p =
-    p
+die (Player data) =
+    Player { data | status = Dead }
 
 
 set : Player -> Players -> Players
@@ -243,7 +267,7 @@ count { p1, p2, p3, p4, p5, p6, p7, p8 } =
         8
 
 
-tiles : Players -> List { point : Point, direction : Direction, id : Int }
+tiles : Players -> List { point : Point, direction : Direction, id : Int, status : Status }
 tiles ({ p1, p2, p3, p4, p5, p6, p7, p8 } as players) =
     tilesAppender 1 p1 <|
         tilesAppender 2 p2 <|
@@ -263,7 +287,7 @@ empty =
                 { index = i
                 , direction = North
                 , status = NotAvailable
-                , bombs = Bombs { left = 3, explosionTime = 3, explosionSize = 3 }
+                , bombs = Bombs { left = 3, explosionTime = 3, explosionSize = 10 }
                 , speed = 10
                 , possition = Point 0 0
                 }
@@ -289,10 +313,10 @@ direction (Player { direction }) =
     direction
 
 
-tilesAppender : Int -> Player -> List { direction : Direction, id : Int, point : Point } -> List { direction : Direction, id : Int, point : Point }
+tilesAppender : Int -> Player -> List { direction : Direction, id : Int, point : Point, status : Status } -> List { direction : Direction, id : Int, point : Point, status : Status }
 tilesAppender id player tiles =
     if not (statusNotAvailable player) then
-        { point = possition player, direction = direction player, id = id } :: tiles
+        { point = possition player, direction = direction player, id = id, status = status player } :: tiles
     else
         tiles
 
@@ -394,3 +418,11 @@ playerUpdater ((Player ({ status } as data)) as player) action =
 
         _ ->
             player
+
+
+addIf : Bool -> a -> List a -> List a
+addIf cond =
+    if cond then
+        (::)
+    else
+        flip always

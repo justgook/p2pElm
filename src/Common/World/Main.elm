@@ -235,9 +235,10 @@ mapSecond2 func ( x, y, z ) =
     ( x, func y, z )
 
 
-allowedCharacters : List Char
-allowedCharacters =
-    [ '@', '$', '#', ' ' ]
+
+-- allowedCharacters : List Char
+-- allowedCharacters =
+--     [ '@', '$', '#', ' ' ]
 
 
 parseRowPlayers : Players -> Int -> String -> List Item -> Int -> List Char -> ( List Item, Players )
@@ -246,7 +247,7 @@ parseRowPlayers players x multiplier result y data =
         Just a ->
             let
                 ( newX, newResult, newPlayers ) =
-                    if member a allowedCharacters then
+                    if member a TileSet.allowed then
                         case String.toInt multiplier of
                             Ok 0 ->
                                 repeaterWithPlayer players x y 1 a |> mapSecond2 (\x -> result ++ x)
@@ -260,7 +261,7 @@ parseRowPlayers players x multiplier result y data =
                         ( x, result, players )
 
                 newMultiplier =
-                    if member a allowedCharacters then
+                    if member a TileSet.allowed then
                         "0"
                     else
                         multiplier ++ String.fromChar a

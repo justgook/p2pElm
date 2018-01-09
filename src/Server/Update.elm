@@ -58,7 +58,7 @@ update income model =
             )
 
         collision msg world =
-            if TileSet.collision (World.tiles world) (Players.newPosition (World.players world) msg) then
+            if TileSet.collision (World.tiles world) (Players.newPosition (World.players world) msg) /= Nothing then
                 ( model, Cmd.none )
             else
                 defaultUpdate msg world
@@ -160,10 +160,16 @@ update income model =
                 ( addItems, removeItems, dalayItemsToRemove, deadPlayers, bombsReturns ) =
                     TileSet.explosion bomb (Players.livePlayersDict players) tiles
 
+                -- TODO make me more nice
                 playersWithBombsReturned =
                     bombsReturns
-                        |> List.map (flip Players.playerByRef players >> Players.increaseBombCount)
-                        |> List.foldl Players.set players
+                        |> List.foldl
+                            (\x xs ->
+                                Players.playerByRef x xs
+                                    |> Players.increaseBombCount
+                                    |> flip Players.set xs
+                            )
+                            players
 
                 playersWithDeath =
                     deadPlayers

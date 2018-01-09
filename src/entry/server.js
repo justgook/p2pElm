@@ -33,7 +33,7 @@ module.exports = function (container) {
       const app = Elm.Main.fullscreen({
         rooms: [
           '4#|#@ #|# @#|4#',
-          '15#' + '|#6 $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#'
+          '15#' + '|#4 b $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#'
         ],
         waitTime: WAIT_TIME,
         fps: FPS,

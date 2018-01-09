@@ -1,12 +1,17 @@
 module Common.World.View exposing (view)
 
-import Common.Players.Main as Players exposing (Players)
+import Common.Players.Main as Players exposing (Players, Status)
 import Common.Players.Message exposing (Direction(..))
 import Common.Point exposing (Point(Point))
 import Common.World.TileSet as TileSet exposing (Item, TileSet)
 import Html exposing (Html, div, li, text, ul)
 import Html.Attributes exposing (class, classList, style)
-import Html.Lazy exposing (lazy)
+import Html.Keyed exposing (node)
+
+
+-- import Html.Lazy exposing (lazy, lazy2)
+-- else
+--     list
 
 
 view : TileSet -> Players -> Html msg
@@ -15,10 +20,9 @@ view tiles players =
         ( w, h ) =
             ( 5, 5 )
     in
-    tiles
-        |> TileSet.map (plain "box") (plain "cube") bomb explosion
-        |> (++) (List.map (lazy (\x -> player x.point x.direction)) <| Players.tiles <| players)
-        |> div
+    render tiles
+        ++ renderPlayers players
+        |> node "div"
             [ class "tiles"
             , style
                 [ ( "width", toString w ++ "em" )
@@ -27,28 +31,52 @@ view tiles players =
             ]
 
 
-plain : String -> Point -> Html msg
+playersFolder : { b | direction : Direction, id : Int, point : Point, status : Status } -> List ( String, Html msg ) -> List ( String, Html msg )
+playersFolder p list =
+    if p.status == Players.Online then
+        player p.point p.direction p.id :: list
+    else
+        list
+
+
+renderPlayers : Players -> List ( String, Html msg )
+renderPlayers =
+    Players.tiles
+        >> List.foldr playersFolder []
+
+
+render : TileSet -> List ( String, Html msg )
+render =
+    TileSet.map (plain "box") (plain "cube") bomb explosion
+
+
+plain : String -> Point -> ( String, Html msg )
 plain t p =
-    div
+    ( generateKey p
+    , div
         [ classList [ ( "tile", True ) ]
         , class t
         , coordinates p
         ]
         []
+    )
 
 
-bomb : Point -> Float -> Html msg
+bomb : Point -> Float -> ( String, Html msg )
 bomb p speed =
-    div
+    ( generateKey p
+    , div
         [ class "tile ball"
         , coordinates p
         ]
         []
+    )
 
 
-explosion : List Point -> Html msg
-explosion =
-    List.map
+explosion : List Point -> ( String, Html msg )
+explosion points =
+    ( generateExplosionKey points
+    , List.map
         (\p ->
             div
                 [ class "explosion"
@@ -56,12 +84,15 @@ explosion =
                 ]
                 []
         )
-        >> div []
+        points
+        |> div []
+    )
 
 
-player : Point -> Direction -> Html msg
-player p d =
-    div
+player : Point -> Direction -> Int -> ( String, Html msg )
+player p d id =
+    ( toString id
+    , div
         [ classList [ ( "tile", True ) ]
         , class "player"
         , class <| direction2String d
@@ -70,6 +101,24 @@ player p d =
         [ div [ class "glasses" ] []
         , div [ class "body" ] []
         ]
+    )
+
+
+generateKey : Point -> String
+generateKey (Point x y) =
+    toString ( x, y )
+
+
+generateExplosionKey : List Point -> String
+generateExplosionKey list =
+    (case list of
+        [] ->
+            Point 0 0
+
+        p :: xs ->
+            p
+    )
+        |> generateKey
 
 
 coordinates : Point -> Html.Attribute msg
