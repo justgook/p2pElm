@@ -23,7 +23,7 @@ function requestServer(app) { //TODO move outside
 }
 
 module.exports = function (container) {
-  require('../style/index.sss') // TODO change to real one
+  // require('../style/index.sss') // TODO change to real one
   console.log('im Server')
   import(/*webpackChunkName: "server" */ '../Server/Main.elm')
     .then(function (Elm) {

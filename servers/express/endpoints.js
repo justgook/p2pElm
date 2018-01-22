@@ -11,10 +11,21 @@ let servers = {}
 const echo = (a) => a
 const not = (a) => !a
 
+function countFalse(acc, i) {
+  return i ? acc : acc + 1
+}
+function entriesMapper([id, { taken }]) {
+  return [id, [taken.length, taken.reduce(countFalse, 0)]]
+}
+
 module.exports = { //TODO find better api and make it cleanner
   '': bodyParser.json(), //parse post bodies (json)
-  '/create-server'(req, res) { //TODO move url to Env variables
 
+  '/list'(req, res) {
+    res.json(Object.entries(servers).map(entriesMapper))
+  },
+
+  '/create-server'(req, res) { //TODO move url to Env variables
     const offers = req.body
     const offersCount = offers.length
     const id = 1 // TODO update to real id!!

@@ -1,56 +1,44 @@
-port module Client.Update exposing (..)
+module Client.Update exposing (..)
 
-import Client.Message exposing (Msg(KeyDown))
-import Client.Model exposing (Model)
-
-
--- import Common.UI as UI
-
-
-port did : Int -> Cmd msg
+import Client.GUI.Main as ClientGUI
+import Client.Message as Message exposing (Message)
+import Client.Model as Model exposing (Model)
+import Client.Port as Port
+import Dict
+import Keyboard exposing (KeyCode)
 
 
-
--- Connected: 0,
--- Disconnected: 1,
--- Up: 2,
--- Right: 3,
--- Down: 4,
--- Left: 5,
--- Bomb: 6,
--- Error: 7,
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Message -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        KeyDown key ->
+        Message.Income incomeMsg ->
             let
                 _ =
-                    Debug.log "KeyDown" key
-
-                action =
-                    case key of
-                        38 ->
-                            did 2
-
-                        39 ->
-                            did 3
-
-                        40 ->
-                            did 4
-
-                        37 ->
-                            did 5
-
-                        32 ->
-                            did 6
-
-                        _ ->
-                            Cmd.none
+                    Debug.log "Implement Me Client::Update::update Message.Income" ""
             in
-            ( model, action )
+            ( model, Cmd.none )
+
+        Message.GUI guiMsg ->
+            ClientGUI.update guiMsg model.page
+                |> Tuple.mapFirst (\m -> { model | page = m })
+
+        Message.KeyDown key ->
+            ( model, keyToOut key )
+
+        Message.Resize device ->
+            ( { model | device = device }, Cmd.none )
 
 
-
--- sending out
+keyToOut : KeyCode -> Cmd msg
+keyToOut =
+    flip Dict.get
+        (Dict.fromList
+            [ ( 38, 2 ) -- Up: 2,
+            , ( 39, 3 ) -- Right: 3,
+            , ( 40, 4 ) -- Down: 4,
+            , ( 37, 5 ) -- Left: 5,
+            , ( 32, 6 ) -- Bomb: 6,
+            ]
+        )
+        >> Maybe.map Port.clientAction
+        >> Maybe.withDefault Cmd.none

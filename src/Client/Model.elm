@@ -1,17 +1,17 @@
-module Client.Model exposing (..)
+module Client.Model exposing (Model, model)
 
-import Client.Message exposing (Msg)
+import Client.GUI.Main as ClientGUI
+import Element exposing (Device, classifyDevice)
 
 
 type alias Model =
-    {}
-
-
-init : ( Model, Cmd Msg )
-init =
-    ( model, Cmd.none )
+    { device : Device
+    , page : ClientGUI.Model
+    }
 
 
 model : Model
 model =
-    {}
+    { device = classifyDevice { width = 0, height = 0 }
+    , page = ClientGUI.None
+    }

@@ -12,7 +12,7 @@ level msg count =
     div [ class "ui-overlay" ]
         [ range 1 count
             |> map (\x -> div [ class "menu-item", onClick (msg x) ] [ div [] [] ])
-            |> (\x -> List.append x [ div [ class "menu-title" ] [] ])
+            |> (++) [ div [ class "menu-title" ] [] ]
             -- Ugly - change to something witout lamda function
             |> div [ class "menu" ]
         ]

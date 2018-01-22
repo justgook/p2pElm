@@ -6,7 +6,7 @@
   bottom: 0
   left: 0
 
-.menu,.menu-title
+.menu,.menu-title, .menu-title-lobby
   position: absolute
   box-sizing: border-box
 
@@ -63,7 +63,7 @@
     border-radius: 1em
     padding: .25em
 
-.menu-title
+.menu-title, .menu-title-lobby
   padding: .5em
   top: 0
   left: 0
@@ -83,6 +83,13 @@
     color: black
     font-family: 'Londrina Outline', cursive
     left: .25em
+
+.menu-title-lobby
+  &::before, &::after
+    content: 'Lobby'
+
+.lobby-item
+  background: red
 
 @keyframes slide
   0%

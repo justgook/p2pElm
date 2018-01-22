@@ -1,15 +1,28 @@
-port module Client.Subscriptions exposing (subscriptions)
+module Client.Subscriptions exposing (sizeToMsg, subscriptions)
 
-import Client.Message exposing (Msg(KeyDown))
+-- ServerList
+-- import Shared.Protocol as Protocol
+
+import Client.GUI.Main as ClientGUI
+import Client.Message as Message exposing (Message)
 import Client.Model exposing (Model)
-import Keyboard
+import Client.Port as Port
+import Element exposing (classifyDevice)
+import Keyboard exposing (KeyCode)
+import Window
 
 
-port income : (( Int, Int ) -> msg) -> Sub msg
+sizeToMsg : Window.Size -> Message
+sizeToMsg =
+    Message.Resize << classifyDevice
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub Message
 subscriptions model =
     Sub.batch
-        [ Keyboard.downs KeyDown
+        [ Keyboard.downs Message.KeyDown
+        , Window.resizes sizeToMsg
+
+        -- , Port.levelUpdate <| Message.Income << Protocol.deserialize
+        , Port.serverListResponse (Message.GUI << ClientGUI.ServerList)
         ]

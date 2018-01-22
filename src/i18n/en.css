@@ -1,0 +1,64 @@
+/* https://strategywiki.org/wiki/Bomberman/How_to_play */
+/* https://developer.mozilla.org/en-US/docs/Web/CSS/::-webkit-scrollbar */
+/*Overscroll hack*/
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body > div {
+  height: 100%;
+  overflow: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-i18n]::before,
+[data-i18n]::before {
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: inherit;
+  /*USE `\A` For line brake*/
+}
+
+[data-i18n]::before {
+  content: "~" attr(data-i18n) "~";
+}
+
+[data-i18n="hello"]::before {
+  content: 'You control Bomberman throughout his efforts to climb the 50 floors of the underground labyrinth and reach the surface in order to become human. \AIn order to do this, you must accomplish two things on each floor: You must destroy every enemy, and you must reveal the exit which can only be used once ever enemy is defeated. In addition to this, every floor contains one power-up that can increase Bomberman\'s abilities, as well as his chances for survival. Bomberman begins the game with ability to produce one bomb at a time with an explosion range of one square. Power-ups can be collected to increase both the number of bombs he can drop, and the range of the explosions. The touch of an enemy, and being caught in an explosion are both lethal to Bomberman (but he can withstand explosions if he collects the Flamepass power-up). Ordinarily, the bombs detonate on their own a couple of seconds after being dropped, but the Detonator power-up can give Bomberman the useful ability to detonate the bombs on command whenever he chooses. Bomberman\'s bombs can also detonate one another in chain reactions.';
+}
+
+[data-i18n="select level"]::before {
+  content: 'SELECT LEVEL';
+}
+
+[data-i18n="create"]::before {
+  content: 'CREATE';
+}
+
+[data-i18n="no games"]::before {
+  content: "There is no online games";
+}
+
+[data-i18n="no games"]::after {
+  display: block;
+  text-align: center;
+  content: "Create one создать";
+}
+
+[data-i18n="create room"]::before {
+  content: "CREATE NEW ROOM";
+}
+
+[data-i18n="wait for players"]::before {
+  content: "WAIT FOR PLAYERS";
+}
+
+[data-i18n="tutorial"]::before {
+  content: "TUTORIAL";
+}

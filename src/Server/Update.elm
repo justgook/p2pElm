@@ -12,6 +12,7 @@ import Server.Model exposing (Model, UntilStart(Seconds, WaitForOpponent))
 import Server.Update.NoLevel as NoLevel
 import Task
 import Time exposing (Time)
+import Util.Guards exposing ((=>), (|=))
 
 
 -- import Common.Players.Model exposing (updatePlayer)
@@ -201,10 +202,14 @@ update income model =
                     ( { model | world = playersUpdate msg world |> Just }, countDown model.waitTime )
 
                 ( Message.Move _, Seconds 0 ) ->
-                    collision msg world
+                    isPlayerLiveFromMsg world msg
+                        => collision msg world
+                        |= ( model, Cmd.none )
 
-                ( Message.Bomb, _ ) ->
-                    placeBomb msg world
+                ( Message.Bomb, Seconds 0 ) ->
+                    isPlayerLiveFromMsg world msg
+                        => placeBomb msg world
+                        |= ( model, Cmd.none )
 
                 _ ->
                     ( { model
@@ -215,3 +220,8 @@ update income model =
 
         _ ->
             ( model, Cmd.none )
+
+
+isPlayerLiveFromMsg : World -> Message -> Bool
+isPlayerLiveFromMsg world =
+    Players.isLive << flip Players.playerByRef (World.players world) << Message.ref

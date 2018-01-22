@@ -1,10 +1,14 @@
 module Client.View exposing (..)
 
-import Client.Message exposing (Msg)
-import Client.Model exposing (Model)
+import Client.GUI.View as GUIview
+import Client.Message as Message exposing (Message)
+import Client.Model as Model exposing (Model)
+import Common.View.GUI.StyleDefault exposing (stylesheet)
+import Element as Element
 import Html exposing (Html, div)
 
 
-view : Model -> Html Msg
+view : Model -> Html Message
 view model =
-    div [] []
+    Element.viewport stylesheet <|
+        GUIview.view model.device model.page

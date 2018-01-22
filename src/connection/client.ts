@@ -1,5 +1,7 @@
-const Peer = require('simple-peer')
-const getOffer = function (serverId, url) {
+// import { SimplePeer } from 'simple-peer'
+import * as Peer from 'simple-peer'
+
+const getOffer = function (serverId: string, url: string) {
   return fetch(url + '/join/' + serverId, { // TODO move to env variable or some custom setting field
     credentials: 'include',
     method: 'GET',
@@ -19,8 +21,8 @@ const getOffer = function (serverId, url) {
     .catch(function (error) { console.log(error) })
 }
 
-function sendAnswer(serverId, index, url) {
-  return function (answer) { // TODO get rid of those functions that returns functions Grr
+function sendAnswer(serverId: string, index: string, url: string) {
+  return function (answer: string) { // TODO get rid of those functions that returns functions Grr
     return fetch(url + '/answer/' + serverId + '/' + index, { // TODO move to env variable or some custom setting field
       credentials: 'include',
       method: 'POST',
@@ -33,11 +35,21 @@ function sendAnswer(serverId, index, url) {
   }
 }
 
-function connectToServer(serverId, url) {
-  return function how(args) {// TODO get rid of those functions that returns functions Grr
-    const p = new Peer({ /*, trickle: false*/ }) //TODO what for trickle?
+interface SignalData {
+  sdp?: any;
+  candidate?: any;
+}
+declare class SimplePeer {
+  constructor(a?: { trickle?: boolean });
+  on(event: string, done: (data: string | SignalData) => void): void;
+  signal(data: string | SignalData): void;
+}
+
+function connectToServer(serverId: string, url: string) {
+  return function how(args: { offer: string, index: string }) {// TODO get rid of those functions that returns functions Grr
+    const p: SimplePeer = new Peer({ /*, trickle: false*/ }) //TODO what for trickle?
     const answer = new Promise(function (resolve, reject) {
-      p.on('signal', function (data) { //TODO findout why ther is {candidate} signals (what for)
+      p.on('signal', function (data: string) { //TODO findout why ther is {candidate} signals (what for)
         // if(data.candidate)
         resolve(data)
       })
@@ -51,7 +63,8 @@ function connectToServer(serverId, url) {
   }
 
 }
-module.exports = function (url, id) {
+
+export default function (url: string, id: string) {
   return getOffer(id, url)
     .then(connectToServer(id, url)) // TODO get rid of those functions that returns functions Grr
 }
