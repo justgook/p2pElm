@@ -7,7 +7,8 @@ module Shared.Protocol
         , serialize
         )
 
-import Game.Entities as GEntities
+import Common.Point exposing (Point(Point))
+import Game.Entities as GEntities exposing (PlayerStatus(..))
 
 
 type Message
@@ -72,7 +73,7 @@ type EntityAction
 
 
 type alias Serialized =
-    String
+    List String
 
 
 
@@ -84,18 +85,106 @@ serialize : Message -> Serialized
 serialize msg =
     case msg of
         PlayerUpdate ->
-            "a"
+            [ "a" ]
 
-        Entity entity ->
-            "a"
+        Entity (Add entity) ->
+            [ "add" ] ++ fromEntity entity
+
+        Entity _ ->
+            [ "a" ]
 
         ServerStatus ->
-            "a"
+            [ "a" ]
 
         Error ->
-            "a"
+            [ "a" ]
 
 
 deserialize : Serialized -> Message
 deserialize data =
-    Error
+    toEntity data
+
+
+fromEntity : GEntities.Entity -> List String
+fromEntity e =
+    case e of
+        GEntities.Player { status, point, speed } ->
+            let
+                (Point x y) =
+                    point
+            in
+            [ "p", toString x, toString y, status2string status, toString speed ]
+
+        GEntities.Box (Point x y) ->
+            [ "b", toString x, toString y ]
+
+        GEntities.Wall (Point x y) ->
+            [ "w", toString x, toString y ]
+
+        _ ->
+            []
+
+
+toEntity : Serialized -> Message
+toEntity s =
+    case s of
+        "add" :: "p" :: x :: y :: status :: speed :: xs ->
+            add <| GEntities.Player { status = string2status status, point = point x y, speed = str2int speed }
+
+        "add" :: "b" :: x :: y :: xs ->
+            add <| GEntities.Box <| point x y
+
+        "add" :: "w" :: x :: y :: xs ->
+            add <| GEntities.Wall <| point x y
+
+        msg ->
+            let
+                _ =
+                    Debug.log "msg" msg
+            in
+            Error
+
+
+status2string : PlayerStatus -> String
+status2string status =
+    case status of
+        PlayerOnline ->
+            "1"
+
+        PlayerOffline ->
+            "2"
+
+        PlayerDead ->
+            "3"
+
+
+string2status : String -> PlayerStatus
+string2status s =
+    case s of
+        "1" ->
+            PlayerOnline
+
+        "2" ->
+            PlayerOffline
+
+        "3" ->
+            PlayerDead
+
+        _ ->
+            PlayerOffline
+
+
+str2int : String -> Int
+str2int =
+    Result.withDefault 0 << String.toInt
+
+
+point : String -> String -> Point
+point x y =
+    Point (str2int x) (str2int y)
+
+
+add : GEntities.Entity -> Message
+add =
+    Entity
+        << Add

@@ -3,15 +3,15 @@ module Common.View.GUI.StyleDefault exposing (scaled, stylesheet)
 -- import Style.Background as Background
 -- import Style.Border as Border
 -- import Style.Font as Font
+-- import Style.Background as Background exposing (step)
+-- import Style.Border as Border
 
 import Color exposing (..)
 import Common.View.GUI.StyleDefault.Button as Button
 import Common.View.GUI.StyleDefault.Content exposing (content, page)
 import Common.View.GUI.StyleDefault.Header exposing (header)
-import Common.View.GUI.Theme exposing (ButtonStyles(..), Theme(..))
+import Common.View.GUI.Theme exposing (ButtonStyles(..), Theme(..), Variation)
 import Style exposing (..)
-import Style.Background as Background exposing (step)
-import Style.Border as Border
 import Style.Color as Color exposing (..)
 import Style.Font as Font
 import Style.Scale as Scale
@@ -28,7 +28,7 @@ scaled =
     Scale.modular 16 1.618
 
 
-delme : List (Property class variation)
+delme : List (Property class Variation)
 delme =
     [ Font.typeface [ Font.font "Seymour One" ]
     , Font.size 32
@@ -36,7 +36,7 @@ delme =
     ]
 
 
-contentResult : List (Property class variation)
+contentResult : List (Property class Variation)
 contentResult =
     content
         ++ delme
@@ -51,36 +51,35 @@ contentResult =
            ]
 
 
-stylesheet : Style.StyleSheet Theme variation
+stylesheet : List (Style Theme Variation)
 stylesheet =
-    Style.styleSheet
-        [ Style.importUrl "https://fonts.googleapis.com/css?family=Seymour+One"
-        , Style.style Header
-            (header
-                ++ delme
-                ++ [ Font.size <| scaled 4 ]
-            )
-        , Style.style Content contentResult
-        , Style.style Footer []
-        , Style.style (Button Active) (Button.active ++ delme)
-        , Style.style (Button Disabled) (Button.disabled ++ delme)
-        , Style.style None []
-        , Style.style Page page
-        , Style.style Loading <| delme ++ [ Font.size <| scaled 4 ]
-        , Style.style GridItem contentResult
-        , Style.style SelectListItem
-            ([ Style.cursor "pointer"
-             , hover
-                [ background <| rgb 253 253 6
-                ]
-             , transitions
-                [ { delay = 0
-                  , duration = second * 0.13
-                  , easing = "ease"
-                  , props = [ "background" ]
-                  }
-                ]
-             ]
-                ++ contentResult
-            )
-        ]
+    [ Style.importUrl "https://fonts.googleapis.com/css?family=Seymour+One"
+    , Style.style Header
+        (header
+            ++ delme
+            ++ [ Font.size <| scaled 4 ]
+        )
+    , Style.style Content contentResult
+    , Style.style Footer []
+    , Style.style (Button Active) (Button.active ++ delme)
+    , Style.style (Button Disabled) (Button.disabled ++ delme)
+    , Style.style None []
+    , Style.style Page page
+    , Style.style Loading <| delme ++ [ Font.size <| scaled 4 ]
+    , Style.style GridItem contentResult
+    , Style.style SelectListItem
+        ([ Style.cursor "pointer"
+         , hover
+            [ background <| rgb 253 253 6
+            ]
+         , transitions
+            [ { delay = 0
+              , duration = second * 0.13
+              , easing = "ease"
+              , props = [ "background" ]
+              }
+            ]
+         ]
+            ++ contentResult
+        )
+    ]

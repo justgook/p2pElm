@@ -1,3 +1,6 @@
+--TODO update to Client.GUI
+
+
 module Client.GUI.Main exposing (..)
 
 -- import Dict
@@ -37,11 +40,16 @@ type Msg
     | ShowWin
 
 
+model : Model
+model =
+    None
+
+
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         Join room ->
-            ( model, Port.join room )
+            ( model, Port.client_join room )
 
         Creating Start ->
             ( BuildingRoom Create.default, Cmd.none )
@@ -50,13 +58,13 @@ update msg model =
             ( BuildingRoom { name = name }, Cmd.none )
 
         Creating (End a) ->
-            ( Loading, Port.create a.name )
+            ( Loading, Port.client_create a.name )
 
         ServerList data ->
             ( Lobby data, Cmd.none )
 
         RequestServerList ->
-            ( Loading, Port.serverListRequest () )
+            ( Loading, Port.client_serverListRequest () )
 
         ShowTutorial ->
             ( Tutorial, Cmd.none )

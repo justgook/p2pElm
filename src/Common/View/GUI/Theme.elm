@@ -1,4 +1,4 @@
-module Common.View.GUI.Theme exposing (ButtonStyles(..), Theme(..))
+module Common.View.GUI.Theme exposing (ButtonStyles(..), Theme(..), Variation(..))
 
 
 type Theme
@@ -16,3 +16,7 @@ type Theme
 type ButtonStyles
     = Active
     | Disabled
+
+
+type Variation
+    = Default

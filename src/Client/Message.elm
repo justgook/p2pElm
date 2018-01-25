@@ -2,16 +2,18 @@ module Client.Message exposing (..)
 
 import Client.GUI.Main as ClientGUI
 import Client.GUI.View.Create as CreateGUI
+import Client.Game.Main as Game
 import Element exposing (Device)
 import Keyboard exposing (KeyCode)
-import Shared.Protocol as Protocol
+import Navigation exposing (Location)
 
 
 type Message
     = Resize Device
     | KeyDown KeyCode
+    | Location Location
     | GUI ClientGUI.Msg
-    | Income Protocol.Message
+    | Game Game.Message
 
 
 type alias Actions =
@@ -27,6 +29,7 @@ type alias Actions =
 
 actions : Actions
 actions =
+    --TODO Maybe move that part to mapping of Element
     { join = GUI << ClientGUI.Join
     , requestList = GUI ClientGUI.RequestServerList
     , startServer = GUI << ClientGUI.Creating << ClientGUI.End

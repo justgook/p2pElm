@@ -18,13 +18,12 @@ async function server(url: string) {
     fps: FPS,
   });
 
-  console.log("serverPotrts", app.ports)
   return new Promise<Result>(function (resolve, reject) {
-    app.ports.serverReady.subscribe(function () {
+    app.ports.server_ready.subscribe(function () {
       resolve({
-        send(action) { app.ports.toServer.send([1, action, Date.now()]) },
-        recive(callback) { app.ports.toClient.subscribe(callback) },
-        restart(room) { app.ports.toServerRestart.send(room) },
+        send(action) { app.ports.server_income.send([1, action, Date.now()]) },
+        recive(callback) { app.ports.server_outcome.subscribe(callback) },
+        restart(room) { app.ports.server_start.send(room) },
       })
     })
   })

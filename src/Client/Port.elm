@@ -4,26 +4,19 @@ import Client.GUI.View.GameList as GameList exposing (Data)
 import Shared.Protocol exposing (Serialized)
 
 
---Client Stuff
+port client_outcome : Int -> Cmd msg
 
 
-port clientAction : Int -> Cmd msg
+port client_income : (Serialized -> msg) -> Sub msg
 
 
-
---TODO find better naming
-
-
-port levelUpdate : (Serialized -> msg) -> Sub msg
+port client_join : String -> Cmd msg
 
 
-port join : String -> Cmd msg
+port client_create : String -> Cmd msg
 
 
-port create : String -> Cmd msg
+port client_serverListRequest : () -> Cmd msg
 
 
-port serverListRequest : () -> Cmd msg
-
-
-port serverListResponse : (GameList.Data -> msg) -> Sub msg
+port client_serverListResponse : (GameList.Data -> msg) -> Sub msg
