@@ -21,7 +21,7 @@ type Message
 type EntityAction
     = Add GEntities.Entity
     | Update GEntities.Entity
-    | Remove GEntities.Entity
+    | Remove GEntities.Id
 
 
 
@@ -108,19 +108,36 @@ deserialize data =
 fromEntity : GEntities.Entity -> List String
 fromEntity e =
     case e of
-        GEntities.Player { status, point, speed } ->
+        GEntities.Player n { status, point, speed, bombsLeft, explosionTime, explosionSize } ->
             let
                 (Point x y) =
                     point
             in
-            [ "p", toString x, toString y, status2string status, toString speed ]
+            [ "1"
+            , toString n
+            , toString x
+            , toString y
+            , status2string status
+            , toString speed
+            , toString bombsLeft
+            , toString explosionTime
+            , toString explosionSize
+            ]
 
-        GEntities.Box (Point x y) ->
-            [ "b", toString x, toString y ]
+        GEntities.Box n (Point x y) ->
+            [ "2", toString n, toString x, toString y ]
 
-        GEntities.Wall (Point x y) ->
-            [ "w", toString x, toString y ]
+        GEntities.Wall n (Point x y) ->
+            [ "3", toString n, toString x, toString y ]
 
+        GEntities.Bomb n { size, author, point } ->
+            let
+                (Point x y) =
+                    point
+            in
+            [ "4", toString n, toString x, toString y ]
+
+        --
         _ ->
             []
 
@@ -128,14 +145,26 @@ fromEntity e =
 toEntity : Serialized -> Message
 toEntity s =
     case s of
-        "add" :: "p" :: x :: y :: status :: speed :: xs ->
-            add <| GEntities.Player { status = string2status status, point = point x y, speed = str2int speed }
+        "add" :: "1" :: n :: x :: y :: status :: speed :: bombsLeft :: explosionTime :: explosionSize :: [] ->
+            add <|
+                GEntities.Player (str2int n)
+                    { status = string2status status
+                    , point = point x y
+                    , speed = str2int speed
+                    , bombsLeft = str2int bombsLeft
+                    , explosionTime = str2float explosionTime
+                    , explosionSize = str2int explosionSize
+                    }
 
-        "add" :: "b" :: x :: y :: xs ->
-            add <| GEntities.Box <| point x y
+        "add" :: "2" :: n :: x :: y :: [] ->
+            add <| GEntities.Box (str2int n) (point x y)
 
-        "add" :: "w" :: x :: y :: xs ->
-            add <| GEntities.Wall <| point x y
+        "add" :: "3" :: n :: x :: y :: [] ->
+            add <| GEntities.Wall (str2int n) (point x y)
+
+        "add" :: "4" :: n :: x :: y :: [] ->
+            -- For render we don't care about size / author
+            add <| GEntities.Bomb (str2int n) { size = 0, author = 0, point = point x y }
 
         msg ->
             let
@@ -177,6 +206,11 @@ string2status s =
 str2int : String -> Int
 str2int =
     Result.withDefault 0 << String.toInt
+
+
+str2float : String -> Float
+str2float =
+    Result.withDefault 0 << String.toFloat
 
 
 point : String -> String -> Point

@@ -1,14 +1,14 @@
 module Client.Game.View.Character exposing (view)
 
 import Client.Game.StyleDefault exposing (scaled)
-import Client.Game.Theme as Theme exposing (Theme, Variation)
+import Client.Game.Theme as Theme exposing (Theme)
 import Element as Element exposing (..)
 import Element.Attributes as Attributes exposing (..)
 import Html
 import Html.Attributes as Html
 
 
-view : Element Theme Variation msg
+view : Element Theme Never Never
 view =
     [ el Theme.PlayerParts [] empty
     , Html.node "div" [ Html.class "foot" ] [ Html.text "" ]

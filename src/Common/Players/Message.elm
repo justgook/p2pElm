@@ -2,20 +2,20 @@ module Common.Players.Message
     exposing
         ( Action(..)
         , Direction(..)
-        , Message
-        , PlayerRef(PlayerRef)
+        , Message(Message)
         , action
         , incomeToMessage
         , ref
         )
 
 
-type PlayerRef
-    = PlayerRef { index : Int }
-
-
 type Message
-    = Message { ref : PlayerRef, action : Action, time : Int }
+    = Message { ref : Int, action : Action, time : Int }
+
+
+ref : Message -> Int
+ref (Message { ref }) =
+    ref
 
 
 type Direction
@@ -33,16 +33,6 @@ type Action
     | Error
 
 
-intToRef : Int -> PlayerRef
-intToRef i =
-    PlayerRef { index = i }
-
-
-ref : Message -> PlayerRef
-ref (Message { ref }) =
-    ref
-
-
 action : Message -> Action
 action (Message { action }) =
     action
@@ -50,7 +40,7 @@ action (Message { action }) =
 
 incomeToMessage : ( Int, Int, Int ) -> Message
 incomeToMessage ( pIndex, action, time ) =
-    Message { ref = intToRef pIndex, action = int2action action, time = time }
+    Message { ref = pIndex, action = int2action action, time = time }
 
 
 int2action : Int -> Action

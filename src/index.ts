@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers';
+
 console.log('my inline loader', require('./build-info.eval.js'));
 require('./i18n/en.css');
 
@@ -40,7 +42,8 @@ declare const SIGNALING_URL: string;
   recive(app.ports.client_income.send) //recive Updates from server
   // restart(' | @ | ')
   restart('15#' + '|#4 b $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#')
-  send(0)
+
+  setTimeout(() => send(0), 0) // NEED TIMEOUT to update server model
   /* ----------------------------------------------------------------*/
 
 })(SIGNALING_URL);
@@ -52,7 +55,7 @@ declare const Stats: any;
   var script = document.createElement('script');
   script.onload = function () {
 
-    var stats: any = new Stats();
+    var stats = new Stats();
     // stats.showPanel(2);
     document.body.appendChild(stats.dom);
     requestAnimationFrame(function loop() {

@@ -28,7 +28,7 @@ scaled =
     Scale.modular 16 1.618
 
 
-delme : List (Property class Variation)
+delme : List (Property class Never)
 delme =
     [ Font.typeface [ Font.font "Seymour One" ]
     , Font.size 32
@@ -36,7 +36,7 @@ delme =
     ]
 
 
-contentResult : List (Property class Variation)
+contentResult : List (Property class Never)
 contentResult =
     content
         ++ delme
@@ -51,7 +51,7 @@ contentResult =
            ]
 
 
-stylesheet : List (Style Theme Variation)
+stylesheet : List (Style Theme Never)
 stylesheet =
     [ Style.importUrl "https://fonts.googleapis.com/css?family=Seymour+One"
     , Style.style Header

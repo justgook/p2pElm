@@ -2,29 +2,44 @@ module Game.Entities
     exposing
         ( Entities(Entities)
         , Entity(..)
+        , Id
         , PlayerStatus(..)
         , add
+        , collision
         , empty
+        , explode
         , fromString
+        , get
+        , id
         , map
         , partition
         , position
+        , remove
+        , setPosition
+        , update
         )
 
 import Char
 import Common.Point exposing (Point(Point))
+import Dict exposing (Dict)
+
+
+type alias Id =
+    Int
 
 
 type Entity
-    = Box Point -- Bonus
-    | Wall Point
-    | Bomb --BombInfo
-    | Explosion --(List Point)
+    = Box Id Point -- Bonus
+    | Wall Id Point
+    | Bomb Id { size : Int, author : Id, point : Point }
+    | Explosion Id (List Point)
     | Player
+        Id
         { status : PlayerStatus
         , point : Point
-
-        -- , bombs : Bombs
+        , bombsLeft : Int
+        , explosionTime : Float
+        , explosionSize : Int
         , speed : Int
         }
 
@@ -42,42 +57,181 @@ type PlayerStatus
 
 
 type Entities
-    = Entities (List Entity)
+    = Entities (Dict Id Entity)
+
+
+
+{- ( updateAddItems, removeIds, removeInTimItems ) -}
+
+
+explode bombId entities =
+    case get bombId entities of
+        Just (Bomb _ { point, size }) ->
+            let
+                goUp (Point x y) d =
+                    Point x (y - d)
+
+                goRight (Point x y) d =
+                    Point (x + d) y
+
+                goDown (Point x y) d =
+                    Point x (y + d)
+
+                goLeft (Point x y) d =
+                    Point (x - d) y
+
+                ( pointsUp, colidedItemsUp ) =
+                    List.range 1 size
+                        |> explodeFoldl (folding goUp entities point) ( [], Nothing )
+                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                ( pointsRight, colidedItemsRight ) =
+                    List.range 1 size
+                        |> explodeFoldl (folding goRight entities point) ( [], Nothing )
+                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                ( pointsDown, colidedItemsDown ) =
+                    List.range 1 size
+                        |> explodeFoldl (folding goDown entities point) ( [], Nothing )
+                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                ( pointsLeft, colidedItemsLeft ) =
+                    List.range 1 size
+                        |> explodeFoldl (folding goLeft entities point) ( [], Nothing )
+                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                ( colidedIds, bombsIds ) =
+                    colidedItemsUp
+                        ++ colidedItemsRight
+                        ++ colidedItemsDown
+                        ++ colidedItemsLeft
+                        |> List.foldl notWall ( [], [] )
+
+                _ =
+                    Debug.log "colidedItems" ( colidedIds, bombsIds )
+
+                explosionPoints =
+                    pointsUp ++ pointsRight ++ pointsDown ++ pointsLeft
+            in
+            ( explosionPoints, bombId :: colidedIds, [] )
+
+        _ ->
+            ( [], [], [] )
+
+
+notWall : Entity -> ( List Id, List Id ) -> ( List Id, List Id )
+notWall x (( xs1, xs2 ) as xs) =
+    case x of
+        Bomb n _ ->
+            ( xs1, n :: xs2 )
+
+        Box n _ ->
+            ( n :: xs1, xs2 )
+
+        _ ->
+            xs
+
+
+folding : (a -> b -> Point) -> Entities -> a -> b -> ( List Point, c ) -> ( List Point, Maybe Entity )
+folding pointUpdater entities point d ( xs, found ) =
+    let
+        newPoint =
+            pointUpdater point d
+    in
+    ( newPoint :: xs, collision newPoint entities )
+
+
+explodeFoldl : (b -> ( List a, Maybe a1 ) -> ( List a, Maybe a1 )) -> ( List a, Maybe a1 ) -> List b -> ( List a, Maybe a1 )
+explodeFoldl func ( acc, found ) list =
+    case ( list, found ) of
+        ( x :: xs, Nothing ) ->
+            explodeFoldl func (func x ( acc, found )) xs
+
+        _ ->
+            ( List.drop 1 acc, found )
+
+
+
+-- stopOnCollision  =
+--     case distanceList of
+--         x :: xs ->
+--             -- if collision point (Entities xs) then
+--             --     Just x
+--             -- else
+--             --     getFirst func xs
+--         [] ->
+--             Nothing
+
+
+explodePoints : Point -> Int -> List Point
+explodePoints (Point x y) distance =
+    [ Point (x + distance) y
+    , Point x (y + distance)
+    , Point (x - distance) y
+    , Point x (y - distance)
+    ]
+
+
+foldExplode : (Entity -> b -> b) -> b -> Entities -> b
+foldExplode func acc list =
+    acc
+
+
+collision : Point -> Entities -> Maybe Entity
+collision point (Entities xs) =
+    --TODO UPDATE to somethink faster
+    getFirst (\e -> position e == point) (Dict.values xs)
+
+
+getFirst : (a -> Bool) -> List a -> Maybe a
+getFirst func list =
+    case list of
+        x :: xs ->
+            if func x then
+                Just x
+            else
+                getFirst func xs
+
+        [] ->
+            Nothing
 
 
 empty : Entities
 empty =
-    Entities []
+    Entities Dict.empty
 
 
 add : List Entity -> Entities -> Entities
 add x (Entities xs) =
-    Entities (xs ++ x)
+    List.foldl (\i r -> Dict.insert (id i) i r) xs x
+        |> Entities
 
 
-remove : List Entity -> Entities -> Entities
-remove a b =
-    let
-        _ =
-            Debug.log "implement me Entities::remove" ""
-    in
-    Entities []
+remove : List Id -> Entities -> Entities
+remove x (Entities xs) =
+    List.foldl (\i r -> Dict.remove i r) xs x
+        |> Entities
 
 
-partition : (Entity -> Bool) -> Entities -> ( Entities, Entities )
+
+-- Dict.remove
+
+
+get : Id -> Entities -> Maybe Entity
+get n (Entities xs) =
+    Dict.get n xs
+
+
+update : List Entity -> Entities -> Entities
+update =
+    add
+
+
+partition : (Id -> Entity -> Bool) -> Entities -> ( List Entity, Entities )
 partition fun (Entities xs) =
-    List.partition fun xs
-        |> Tuple.mapFirst Entities
+    Dict.partition fun xs
+        |> Tuple.mapFirst Dict.values
         |> Tuple.mapSecond Entities
-
-
-update : Entity -> Entities -> Entities
-update a b =
-    let
-        _ =
-            Debug.log "implement me Entities::update" ""
-    in
-    Entities []
 
 
 map : (Entity -> a) -> Entities -> List a
@@ -86,120 +240,178 @@ map f xs =
         (Entities xs_) =
             xs
     in
-    List.map f xs_
+    Dict.values xs_
+        |> List.map f
+
+
+id : Entity -> Id
+id item =
+    case item of
+        Box i _ ->
+            i
+
+        Wall i p ->
+            i
+
+        Bomb i p ->
+            i
+
+        Explosion i _ ->
+            i
+
+        Player i { point } ->
+            i
 
 
 position : Entity -> Point
 position item =
     case item of
-        Box p ->
-            p
+        Box _ point ->
+            point
 
-        Wall p ->
-            p
+        Wall _ point ->
+            point
 
-        Bomb ->
-            Point 0 0
+        Bomb _ { point } ->
+            point
 
-        Explosion ->
-            Point 0 0
+        Explosion _ lp ->
+            case lp of
+                p :: _ ->
+                    p
 
-        Player { point } ->
+                [] ->
+                    Point 0 0
+
+        Player _ { point } ->
             point
 
 
+setPosition : Point -> Entity -> Entity
+setPosition point item =
+    case item of
+        Box n p ->
+            Box n point
 
--- Bomb (BombInfo { point }) ->
---     point
--- Explosion lp ->
---     case lp of
---         p :: _ ->
---             p
---         [] ->
---             Point 0 0
+        Wall n p ->
+            Wall n point
+
+        Bomb n data ->
+            Bomb n { data | point = point }
+
+        Explosion n ps ->
+            Explosion n (point :: ps)
+
+        Player n data ->
+            Player n { data | point = point }
+
+
+
 {-
    based on: <https://github.com/elm-community/list-extra/blob/7.0.1/src/List/Extra.elm>
 -}
 ------------------------------------INTERNAL STUFF--------------------------------------
+-- indexedFoldl : (Int -> a -> b -> b) -> b -> List a -> b
+-- indexedFoldl func acc list =
+--     let
+--         step : a -> ( Int, b ) -> ( Int, b )
+--         step x ( index, acc ) =
+--             ( index + 1, func index x acc )
+--     in
+--     Tuple.second (List.foldl step ( 0, acc ) list)
+-- fromString : String -> Entities
 
 
-indexedFoldl : (Int -> a -> b -> b) -> b -> List a -> b
-indexedFoldl func acc list =
-    let
-        step : a -> ( Int, b ) -> ( Int, b )
-        step x ( index, acc ) =
-            ( index + 1, func index x acc )
-    in
-    Tuple.second (List.foldl step ( 0, acc ) list)
-
-
-fromString : String -> Entities
+fromString : String -> ( Entities, Id )
 fromString data =
-    -- let
-    --     step x ( i, acc ) =
-    --         ( i + 1, (\y d -> parseRow 0 y "0" d) i x acc )
-    -- in
-    -- String.split "|" data
-    --     |> List.foldl step ( 0, empty )
-    --     |> Tuple.second
-    String.split "|" data
-        |> indexedFoldl (\y d -> parseRow 0 y "0" d) empty
+    let
+        step x ( i, acc, id_ ) =
+            let
+                ( emm, newId ) =
+                    (\y d -> parseRow id_ 0 y "0" d) i x acc
+            in
+            ( i + 1, emm, newId )
+
+        ( _, result, lastId ) =
+            String.split "|" data
+                |> List.foldl step ( 0, empty, 0 )
+    in
+    ( result, lastId )
 
 
 
--- |> Tuple.second
+--     |> indexedFoldl (\y d -> parseRow 0 y "0" d) empty
 -------INTERNAL STUFF--------------------------------------------------------------------------------------------
 
 
-parseRow : Int -> Int -> String -> String -> Entities -> Entities
-parseRow x y multiplier data result =
+parseRow : Id -> Int -> Int -> String -> String -> Entities -> ( Entities, Id )
+parseRow id_ x y multiplier data result =
     let
-        boxWrapper : Int -> Int -> Entity
-        boxWrapper x y =
-            Box (Point x y)
+        boxWrapper : Int -> Int -> Int -> Entity
+        boxWrapper n x y =
+            Box n (Point x y)
 
-        wallWrapper : Int -> Int -> Entity
-        wallWrapper x y =
-            Wall (Point x y)
+        wallWrapper : Int -> Int -> Int -> Entity
+        wallWrapper n x y =
+            Wall n (Point x y)
 
-        playerWrapper : Int -> Int -> Entity
-        playerWrapper x y =
-            Player { status = PlayerOffline, point = Point x y, speed = 1 }
+        playerWrapper : Int -> Int -> Int -> Entity
+        playerWrapper n x y =
+            Player n
+                { status = PlayerOffline
+                , point = Point x y
+                , speed = 1
+                , bombsLeft = 3
+                , explosionTime = 0.2
+                , explosionSize = 10
+                }
     in
     case String.uncons data of
         Just ( c, unparsedData ) ->
             (if Char.isDigit c then
-                ( x, y, multiplier ++ String.fromChar c, unparsedData, result )
+                ( id_, x, y, multiplier ++ String.fromChar c, unparsedData, result )
              else if c == '@' then
-                appender x y multiplier unparsedData result playerWrapper
+                appender id_ x y multiplier unparsedData result playerWrapper
              else if c == '#' then
-                appender x y multiplier unparsedData result wallWrapper
+                appender id_ x y multiplier unparsedData result wallWrapper
              else if c == '$' then
-                appender x y multiplier unparsedData result boxWrapper
-                --  else if c == ' ' then
-                --     ( x + multiplier2int multiplier, y, "0", unparsedData, result )
+                appender id_ x y multiplier unparsedData result boxWrapper
              else
-                ( x + multiplier2int multiplier, y, "0", unparsedData, result )
+                ( id_, x + multiplier2int multiplier, y, "0", unparsedData, result )
             )
-                |> uncurry5 parseRow
+                |> uncurry6 parseRow
 
         Nothing ->
-            result
+            ( result, id_ )
 
 
-appender : Int -> Int -> String -> a -> Entities -> (Int -> Int -> Entity) -> ( Int, Int, String, a, Entities )
-appender x y m d r wrapper =
+appender : Id -> Int -> Int -> String -> String -> Entities -> (Id -> Int -> Int -> Entity) -> ( Id, Int, Int, String, String, Entities )
+appender id_ x y m d r wrapper =
     let
         mult =
             multiplier2int m
+
+        ( newId, entities ) =
+            repeater id_ x y mult wrapper
     in
-    ( x + mult, y, "0", d, add (repeater x y mult wrapper) r )
+    ( newId, x + mult, y, "0", d, add entities r )
 
 
-repeater : Int -> Int -> Int -> (Int -> Int -> Entity) -> List Entity
-repeater x y mult wrapper =
+repeater : Int -> Int -> Int -> Int -> (Int -> Int -> Int -> Entity) -> ( Id, List Entity )
+repeater id_ x y mult wrapper =
+    let
+        func n x acc =
+            wrapper n x y :: acc
+
+        step x ( index, acc ) =
+            ( index + 1, func index x acc )
+    in
     List.range x (mult - 1 + x)
-        |> List.map (flip wrapper y)
+        |> List.foldl step ( id_, [] )
+
+
+
+--List.map (flip (wrapper id_) y)
 
 
 multiplier2int : String -> Int
@@ -210,21 +422,6 @@ multiplier2int =
         >> Result.withDefault 0
 
 
-uncurry5 : (a -> b -> c -> d -> e -> f) -> ( a, b, c, d, e ) -> f
-uncurry5 func ( a, b, c, d, e ) =
-    func a b c d e
-
-
-
--- add
--- type Bonus
---     = BombBonus
---     | Speed
---     | None
--- type BombInfo
---     = BombInfo
---         { point : Point
---         , size : Int
---         , speed : Float
---         , owner : PlayerRef
---         }
+uncurry6 : (a -> b -> c -> d -> e -> f -> g) -> ( a, b, c, d, e, f ) -> g
+uncurry6 func ( a, b, c, d, e, f ) =
+    func a b c d e f

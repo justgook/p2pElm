@@ -1,10 +1,11 @@
-module Client.Game.StyleDefault exposing (scaled, stylesheet)
+module Client.Game.StyleDefault exposing (angleX, angleZ, scaled, stylesheet)
 
-import Client.Game.Theme exposing (Theme(..), Variation(..))
+-- import Style.Border as Border
+
+import Client.Game.Theme exposing (Theme(..))
 import Client.Game.View.Box as Box
 import Color exposing (..)
 import Style exposing (..)
-import Style.Border as Border
 import Style.Color as Color exposing (..)
 import Style.Scale as Scale
 
@@ -14,15 +15,17 @@ scaled =
     Scale.modular 64 1.618
 
 
-
--- type PlayerParts
---     = Head
---     | Body
---     | Foots
---     | Hand
+angleX : Float
+angleX =
+    atan2 4 3
 
 
-stylesheet : List (Style Theme Variation)
+angleZ : Float
+angleZ =
+    degrees 29
+
+
+stylesheet : List (Style Theme Never)
 stylesheet =
     [ style None []
     , style FLoor floor
@@ -32,6 +35,7 @@ stylesheet =
     , style Wall <|
         cube
             ++ Box.style2
+    , style Bomb <| bomb
     , style Player
         [ prop "position" "absolute"
         , prop "transform-style" "preserve-3d"
@@ -67,6 +71,40 @@ stylesheet =
              ]
                 ++ charBox "not(always_true) ~ div.rheand" 0.25 0.5 0.25
             )
+        ]
+    ]
+
+
+bomb : List (Property class variation)
+bomb =
+    [ prop "background-color" "black"
+    , prop "background-image" ("radial-gradient(circle at " ++ unitPX 0.5 ++ " " ++ unitPX 1.2 ++ ", rgba(255,255,255, .05), rgba(255,255,255, .1) " ++ unitPX 0.8 ++ ", transparent " ++ unitPX 1 ++ ")")
+    , prop "border-radius" "50%"
+    , prop "transform" ("rotateZ(" ++ toString -angleZ ++ "rad) rotateX(" ++ toString -angleX ++ "rad) translateY(" ++ unitPX -0.25 ++ ") translateZ(" ++ unitPX 0.5 ++ ")")
+    , pseudo "before"
+        [ prop "content" "''"
+        , prop "position" "absolute"
+        , prop "background" "radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%)"
+        , prop "border-radius" "50%"
+        , prop "bottom" "2.5%"
+        , prop "left" "5%"
+        , prop "opacity" "0.6"
+        , prop "height" "100%"
+        , prop "width" "90%"
+        , prop "filter" "blur(.1em)"
+        , prop "z-index" "2"
+        ]
+    , pseudo "after"
+        [ prop "width" "100%"
+        , prop "height" "100%"
+        , prop "content" "''"
+        , prop "position" "absolute"
+        , prop "top" ".05em"
+        , prop "left" ".1em"
+        , prop "border-radius" "50%"
+        , prop "background" "radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4) 14%, rgba(255, 255, 255, 0) 24%)"
+        , prop "transform" ("translateX(" ++ unitPX -0.2 ++ ") translateY(" ++ unitPX -0.2 ++ ") skewX(-20deg)")
+        , prop "filter" "blur(.03em)"
         ]
     ]
 

@@ -1,14 +1,11 @@
-module Client.Game.Theme exposing (Theme(..), Variation(..))
+module Client.Game.Theme exposing (Theme(..))
 
 
 type Theme
     = None
     | Wall
     | Box
+    | Bomb
     | FLoor
     | Player
     | PlayerParts
-
-
-type Variation
-    = Default

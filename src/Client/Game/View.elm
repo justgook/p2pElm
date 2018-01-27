@@ -1,8 +1,8 @@
 module Client.Game.View exposing (view)
 
 import Client.Game.Main as Game
-import Client.Game.StyleDefault exposing (scaled)
-import Client.Game.Theme as Theme exposing (Theme, Variation)
+import Client.Game.StyleDefault exposing (angleX, angleZ, scaled)
+import Client.Game.Theme as Theme exposing (Theme)
 import Client.Game.View.Character as Character
 import Common.Point exposing (Point(Point))
 import Element as Element exposing (..)
@@ -10,12 +10,7 @@ import Element.Attributes as Attributes exposing (..)
 import Game.Entities as Entities exposing (Entities, Entity(..))
 
 
-angle : String
-angle =
-    toString (atan2 4 3)
-
-
-view : Device -> Game.Model -> Element Theme Variation msg
+view : Device -> Game.Model -> Element Theme Never Never
 view device ({ entities, size } as model) =
     let
         _ =
@@ -34,7 +29,7 @@ view device ({ entities, size } as model) =
                 (row Theme.FLoor
                     [ width (unit size.width)
                     , height (unit size.height)
-                    , inlineStyle [ ( "transform", "rotateX(" ++ angle ++ "rad) rotateZ(29deg)" ) ]
+                    , inlineStyle [ ( "transform", "rotateX(" ++ toString angleX ++ "rad) rotateZ(" ++ toString angleZ ++ "rad)" ) ]
                     ]
                     (Entities.map draw entities)
                 )
@@ -55,26 +50,26 @@ unitPX i =
 -- http://package.elm-lang.org/packages/elm-lang/lazy/2.0.0/Lazy
 
 
-draw : Entity -> Element Theme Variation msg
+draw : Entity -> Element Theme Never Never
 draw e =
     case e of
-        Box p ->
+        Box _ p ->
             entity empty Theme.Box p
 
-        Wall p ->
+        Wall _ p ->
             entity empty Theme.Wall p
 
-        Bomb ->
+        Bomb _ { point } ->
+            entity empty Theme.Bomb point
+
+        Explosion _ _ ->
             empty
 
-        Explosion ->
-            empty
-
-        Player { point } ->
+        Player _ { point } ->
             entity Character.view Theme.Player point
 
 
-entity : Element Theme variation msg -> Theme -> Point -> Element Theme variation msg
+entity : Element Theme Never Never -> Theme -> Point -> Element Theme Never Never
 entity child class (Point x y) =
     el class
         [ inlineStyle <|
