@@ -36,6 +36,7 @@ stylesheet =
         cube
             ++ Box.style2
     , style Bomb <| bomb
+    , style Explosion [ pseudo "not(always_true) ~ div.boom" explosion ]
     , style Player
         [ prop "position" "absolute"
         , prop "transform-style" "preserve-3d"
@@ -72,6 +73,11 @@ stylesheet =
                 ++ charBox "not(always_true) ~ div.rheand" 0.25 0.5 0.25
             )
         ]
+    ]
+
+
+explosion =
+    [ prop "background-color" "black"
     ]
 
 

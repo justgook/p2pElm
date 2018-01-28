@@ -6,6 +6,7 @@ type Theme
     | Wall
     | Box
     | Bomb
+    | Explosion
     | FLoor
     | Player
     | PlayerParts

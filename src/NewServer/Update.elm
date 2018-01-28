@@ -60,27 +60,25 @@ update msg model =
 
         BombExplode bombId ->
             let
-                ( explosionPoints, removeIds, addItems ) =
+                ( explPoints, items2remove, deadPlayers ) =
                     Entities.explode bombId model.entities
 
                 newEntities =
-                    Explosion bombId explosionPoints :: addItems
+                    Explosion bombId explPoints
 
+                --:: addItems
                 entities =
-                    Entities.add newEntities model.entities
-                        |> Entities.remove removeIds
+                    --Entities.add [ newEntities ] No point of store explosion on server
+                    model.entities
+                        |> Entities.remove items2remove
             in
             { model | entities = entities }
-                ! (List.map sendAddOrUpdate newEntities
-                    ++ List.map sendRemove removeIds
+                ! (sendAddOrUpdate newEntities
+                    :: List.map sendRemove items2remove
                   )
 
-        PlayerConnects connId playerWitoutUpdate ->
+        PlayerConnects connId entity ->
             let
-                entity =
-                    --TODO move to subscription.. maybe..
-                    playerOnline playerWitoutUpdate
-
                 newEntities =
                     Entities.add [ entity ] model.entities
 
@@ -220,13 +218,3 @@ isPlayer _ e =
 
         _ ->
             False
-
-
-playerOnline : Entity -> Entity
-playerOnline e =
-    case e of
-        Player id data ->
-            Player id { data | status = PlayerOnline }
-
-        _ ->
-            e

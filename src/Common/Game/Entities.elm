@@ -21,6 +21,7 @@ module Game.Entities
 
 import Char
 import Common.Point exposing (Point(Point))
+import Common.Point.PointSet as PointSet exposing (fromList, toList)
 import Dict exposing (Dict)
 
 
@@ -46,7 +47,6 @@ type Entity
 
 type PlayerStatus
     = PlayerOnline
-    | PlayerOffline
     | PlayerDead
 
 
@@ -65,68 +65,101 @@ type Entities
 
 
 explode bombId entities =
-    case get bombId entities of
-        Just (Bomb _ { point, size }) ->
-            let
-                goUp (Point x y) d =
-                    Point x (y - d)
-
-                goRight (Point x y) d =
-                    Point (x + d) y
-
-                goDown (Point x y) d =
-                    Point x (y + d)
-
-                goLeft (Point x y) d =
-                    Point (x - d) y
-
-                ( pointsUp, colidedItemsUp ) =
-                    List.range 1 size
-                        |> explodeFoldl (folding goUp entities point) ( [], Nothing )
-                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
-
-                ( pointsRight, colidedItemsRight ) =
-                    List.range 1 size
-                        |> explodeFoldl (folding goRight entities point) ( [], Nothing )
-                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
-
-                ( pointsDown, colidedItemsDown ) =
-                    List.range 1 size
-                        |> explodeFoldl (folding goDown entities point) ( [], Nothing )
-                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
-
-                ( pointsLeft, colidedItemsLeft ) =
-                    List.range 1 size
-                        |> explodeFoldl (folding goLeft entities point) ( [], Nothing )
-                        |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
-
-                ( colidedIds, bombsIds ) =
-                    colidedItemsUp
-                        ++ colidedItemsRight
-                        ++ colidedItemsDown
-                        ++ colidedItemsLeft
-                        |> List.foldl notWall ( [], [] )
-
-                _ =
-                    Debug.log "colidedItems" ( colidedIds, bombsIds )
-
-                explosionPoints =
-                    pointsUp ++ pointsRight ++ pointsDown ++ pointsLeft
-            in
-            ( explosionPoints, bombId :: colidedIds, [] )
-
-        _ ->
-            ( [], [], [] )
+    let
+        ( explPoints, items2remove, deadPlayers, rest ) =
+            bombRecursion [ bombId ] entities ( [], [], [], [] )
+    in
+    ( explPoints, items2remove, deadPlayers )
 
 
-notWall : Entity -> ( List Id, List Id ) -> ( List Id, List Id )
-notWall x (( xs1, xs2 ) as xs) =
+bombRecursion : List Id -> Entities -> ( List Point, List Id, List Id, List Id ) -> ( List Point, List Id, List Id, List Id )
+bombRecursion bombIds entities acc =
+    case bombIds of
+        [] ->
+            acc
+
+        bombId :: bobsLeft ->
+            case get bombId entities of
+                Just (Bomb _ { point, size }) ->
+                    let
+                        goUp (Point x y) d =
+                            Point x (y - d)
+
+                        goRight (Point x y) d =
+                            Point (x + d) y
+
+                        goDown (Point x y) d =
+                            Point x (y + d)
+
+                        goLeft (Point x y) d =
+                            Point (x - d) y
+
+                        ( pointsUp, colidedItemsUp ) =
+                            List.range 1 size
+                                |> explodeFoldl (folding goUp entities point) ( [], Nothing )
+                                |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                        ( pointsRight, colidedItemsRight ) =
+                            List.range 1 size
+                                |> explodeFoldl (folding goRight entities point) ( [], Nothing )
+                                |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                        ( pointsDown, colidedItemsDown ) =
+                            List.range 1 size
+                                |> explodeFoldl (folding goDown entities point) ( [], Nothing )
+                                |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                        ( pointsLeft, colidedItemsLeft ) =
+                            List.range 1 size
+                                |> explodeFoldl (folding goLeft entities point) ( [], Nothing )
+                                |> Tuple.mapSecond (Maybe.map List.singleton >> Maybe.withDefault [])
+
+                        ( colidedIds, bombsIds, deadPlayers ) =
+                            colidedItemsUp
+                                ++ colidedItemsRight
+                                ++ colidedItemsDown
+                                ++ colidedItemsLeft
+                                |> List.foldl outputFilter ( [], [], [] )
+
+                        explosionPoints =
+                            [ point ]
+                                ++ pointsUp
+                                ++ pointsRight
+                                ++ pointsDown
+                                ++ pointsLeft
+                                |> PointSet.fromList
+                                |> PointSet.toList
+
+                        ( first, second, third, rest ) =
+                            acc
+
+                        resultbombsIds =
+                            bombsIds ++ bobsLeft
+
+                        result =
+                            ( explosionPoints ++ first
+                            , bombId :: colidedIds ++ second
+                            , deadPlayers ++ third
+                            , resultbombsIds
+                            )
+                    in
+                    bombRecursion resultbombsIds (remove [ bombId ] entities) result
+
+                _ ->
+                    acc
+
+
+outputFilter : Entity -> ( List Id, List Id, List Id ) -> ( List Id, List Id, List Id )
+outputFilter x (( xs1, xs2, xs3 ) as xs) =
     case x of
         Bomb n _ ->
-            ( xs1, n :: xs2 )
+            ( xs1, n :: xs2, xs3 )
 
         Box n _ ->
-            ( n :: xs1, xs2 )
+            ( n :: xs1, xs2, xs3 )
+
+        Player n data ->
+            ( xs1, xs2, n :: xs3 )
 
         _ ->
             xs
@@ -151,18 +184,6 @@ explodeFoldl func ( acc, found ) list =
             ( List.drop 1 acc, found )
 
 
-
--- stopOnCollision  =
---     case distanceList of
---         x :: xs ->
---             -- if collision point (Entities xs) then
---             --     Just x
---             -- else
---             --     getFirst func xs
---         [] ->
---             Nothing
-
-
 explodePoints : Point -> Int -> List Point
 explodePoints (Point x y) distance =
     [ Point (x + distance) y
@@ -172,14 +193,9 @@ explodePoints (Point x y) distance =
     ]
 
 
-foldExplode : (Entity -> b -> b) -> b -> Entities -> b
-foldExplode func acc list =
-    acc
-
-
 collision : Point -> Entities -> Maybe Entity
 collision point (Entities xs) =
-    --TODO UPDATE to somethink faster
+    --TODO UPDATE to somethink faster Dict Point:[id]
     getFirst (\e -> position e == point) (Dict.values xs)
 
 
@@ -358,11 +374,11 @@ parseRow id_ x y multiplier data result =
         playerWrapper : Int -> Int -> Int -> Entity
         playerWrapper n x y =
             Player n
-                { status = PlayerOffline
+                { status = PlayerOnline
                 , point = Point x y
                 , speed = 1
                 , bombsLeft = 3
-                , explosionTime = 0.2
+                , explosionTime = 2
                 , explosionSize = 10
                 }
     in

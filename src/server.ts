@@ -21,7 +21,7 @@ async function server(url: string) {
   return new Promise<Result>(function (resolve, reject) {
     app.ports.server_ready.subscribe(function () {
       resolve({
-        send(action) { app.ports.server_income.send([1, action, Date.now()]) },
+        send(action) { app.ports.server_income.send([0, action, Date.now()]) },
         recive(callback) { app.ports.server_outcome.subscribe(callback) },
         restart(room) { app.ports.server_start.send(room) },
       })

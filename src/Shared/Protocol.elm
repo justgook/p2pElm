@@ -15,12 +15,11 @@ type Message
     = PlayerUpdate
     | Entity EntityAction
     | ServerStatus
-    | Error
+    | Error Serialized
 
 
 type EntityAction
     = Add GEntities.Entity
-    | Update GEntities.Entity
     | Remove GEntities.Id
 
 
@@ -90,14 +89,18 @@ serialize msg =
         Entity (Add entity) ->
             [ "add" ] ++ fromEntity entity
 
-        Entity _ ->
-            [ "a" ]
+        Entity (Remove id) ->
+            [ "remove" ] ++ [ toString id ]
 
         ServerStatus ->
             [ "a" ]
 
-        Error ->
-            [ "a" ]
+        Error m ->
+            let
+                _ =
+                    Debug.log "Protocol serialize got unknown Msg" m
+            in
+            [ "error" ]
 
 
 deserialize : Serialized -> Message
@@ -137,9 +140,8 @@ fromEntity e =
             in
             [ "4", toString n, toString x, toString y ]
 
-        --
-        _ ->
-            []
+        GEntities.Explosion n points ->
+            [ "5", toString n ] ++ List.concatMap (\(Point x y) -> [ toString x, toString y ]) points
 
 
 toEntity : Serialized -> Message
@@ -166,12 +168,24 @@ toEntity s =
             -- For render we don't care about size / author
             add <| GEntities.Bomb (str2int n) { size = 0, author = 0, point = point x y }
 
+        "add" :: "5" :: n :: xs ->
+            add <| GEntities.Explosion (str2int n) <| dualFold (\x y -> Point (str2int x) (str2int y)) xs []
+
+        "remove" :: id :: [] ->
+            remove (str2int id)
+
         msg ->
-            let
-                _ =
-                    Debug.log "msg" msg
-            in
-            Error
+            Error msg
+
+
+dualFold : (a -> a -> b) -> List a -> List b -> List b
+dualFold f l acc =
+    case l of
+        x :: y :: xs ->
+            dualFold f xs (acc ++ [ f x y ])
+
+        _ ->
+            acc
 
 
 status2string : PlayerStatus -> String
@@ -180,11 +194,8 @@ status2string status =
         PlayerOnline ->
             "1"
 
-        PlayerOffline ->
-            "2"
-
         PlayerDead ->
-            "3"
+            "2"
 
 
 string2status : String -> PlayerStatus
@@ -194,13 +205,10 @@ string2status s =
             PlayerOnline
 
         "2" ->
-            PlayerOffline
-
-        "3" ->
             PlayerDead
 
         _ ->
-            PlayerOffline
+            PlayerOnline
 
 
 str2int : String -> Int
@@ -222,3 +230,9 @@ add : GEntities.Entity -> Message
 add =
     Entity
         << Add
+
+
+remove : GEntities.Id -> Message
+remove =
+    Entity
+        << Remove

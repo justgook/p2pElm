@@ -8,6 +8,8 @@ import Common.Point exposing (Point(Point))
 import Element as Element exposing (..)
 import Element.Attributes as Attributes exposing (..)
 import Game.Entities as Entities exposing (Entities, Entity(..))
+import Html
+import Html.Attributes as Html
 
 
 view : Device -> Game.Model -> Element Theme Never Never
@@ -62,11 +64,35 @@ draw e =
         Bomb _ { point } ->
             entity empty Theme.Bomb point
 
-        Explosion _ _ ->
-            empty
+        Explosion _ points ->
+            explosion Theme.Explosion points
 
         Player _ { point } ->
             entity Character.view Theme.Player point
+
+
+explosion : Theme -> List Point -> Element Theme Never Never
+explosion class points =
+    (el Theme.Explosion [] empty
+        :: List.map
+            (\(Point x y) ->
+                Html.node "div"
+                    [ Html.class "boom"
+                    , Html.style
+                        [ ( "position", "absolute" )
+                        , ( "left", unitPX x )
+                        , ( "top", unitPX y )
+                        , ( "z-index", toString (x + y) )
+                        , ( "width", unitPX 1 )
+                        , ( "height", unitPX 1 )
+                        ]
+                    ]
+                    [ Html.text "" ]
+                    |> Element.html
+            )
+            points
+    )
+        |> row Theme.None []
 
 
 entity : Element Theme Never Never -> Theme -> Point -> Element Theme Never Never

@@ -40,6 +40,13 @@ update msg model =
             , Cmd.none
             )
 
+        Protocol.Entity (Protocol.Remove id) ->
+            ( { model
+                | entities = Entities.remove [ id ] model.entities
+              }
+            , Cmd.none
+            )
+
         _ ->
             ( model, Cmd.none )
 
