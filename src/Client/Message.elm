@@ -14,6 +14,7 @@ type Message
     | Location Location
     | GUI ClientGUI.Msg
     | Game Game.Message
+    | NewConnection Int
 
 
 type alias Actions =

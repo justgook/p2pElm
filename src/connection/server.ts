@@ -7,18 +7,18 @@ const prepareOffers = function (count: number) {
         const peer = new Peer({ initiator: true })
         // create all connections as server (open door for peers)
         peer.on('error', function (err: string) { console.log('error', err) })
-        peer.on('connect', function () {
-          console.log('CONNECT' + i)
-          peer.send('Hello You are #' + i)
-        })
-        peer.on('close', function () {
-          //TODO add some more logic to it, that will free out slot, and some mechanism that will initiati new event, for reconnected
-          console.log('Peer #' + i + ' leave')
-        })
-        // peer.destroy
-        peer.on('data', function (data: string) {
-          console.log('data(WebRTC)[' + i + ']: ' + data)
-        })
+        // peer.on('connect', function () {
+        //   console.log('CONNECT' + i)
+        //   peer.send('Hello You are #' + i)
+        // })
+        // peer.on('close', function () {
+        //   //TODO add some more logic to it, that will free out slot, and some mechanism that will initiati new event, for reconnected
+        //   console.log('Peer #' + i + ' leave')
+        // })
+        // // peer.destroy
+        // peer.on('data', function (data: string) {
+        //   console.log('data(WebRTC)[' + i + ']: ' + data)
+        // })
         peer.on('signal', function (offer: string) { // generate offers
           resolve({ offer: offer, peer: peer })
         })

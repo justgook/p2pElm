@@ -18,33 +18,29 @@ declare const SIGNALING_URL: string;
   const app = Elm.Client.Main.fullscreen()
   app.ports.client_serverListRequest.subscribe(async function () {
     const response: any = await fetch(`${url}/list`)
-    // app.ports.client_serverListResponse.send(await response.json())
+    app.ports.client_serverListResponse.send(await response.json())
   })
 
   app.ports.client_create.subscribe(async function (name: string) {
-    const server = await import(/*webpackChunkName: "server" */ './server')
+    const { server } = await import(/*webpackChunkName: "server" */ './server')
     console.log(`request level creation with name ${name}`)
+    /* ----------------------------------------------------------------*/
+    const { send, recive, restart } = await server(SIGNALING_URL);
+    app.ports.client_outcome.subscribe(send); //send client Actions to server
+    recive(app.ports.client_income.send) //recive Updates from server
+    restart('15#' + '|#4 b $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#')
+    setTimeout(() => send(0), 0) // NEED TIMEOUT to wait until server model updates
+    /* ----------------------------------------------------------------*/
   })
 
   app.ports.client_join.subscribe(function (id: string) {
     join2server(url, id).then(function (serverConnection: any) {
       serverConnection.on('data', function (data: any) {
-        console.log('data from server: ' + data)
+        app.ports.client_income.send(JSON.parse(data + ""))
       })
-      app.ports.client_outcome.subscribe(serverConnection.send)
+      app.ports.client_outcome.subscribe((a: number) => serverConnection.send(a))
     })
   })
-
-  /* ----------------------------------------------------------------*/
-  const { server } = await import(/*webpackChunkName: "server" */ './server')
-  const { send, recive, restart } = await server(SIGNALING_URL);
-  app.ports.client_outcome.subscribe(send); //send client Actions to server
-  recive(app.ports.client_income.send) //recive Updates from server
-  // restart(' | @ | ')
-  restart('15#' + '|#4 b $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#')
-
-  setTimeout(() => send(0), 0) // NEED TIMEOUT to update server model
-  /* ----------------------------------------------------------------*/
 
 })(SIGNALING_URL);
 

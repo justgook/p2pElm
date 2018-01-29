@@ -22,6 +22,16 @@ subscriptions model =
     Sub.batch
         [ Keyboard.downs Message.KeyDown
         , Window.resizes sizeToMsg
-        , Port.client_income <| Message.Game << Protocol.deserialize
+        , Port.client_income <| splitIncome << Protocol.deserialize
         , Port.client_serverListResponse (Message.GUI << ClientGUI.ServerList)
         ]
+
+
+splitIncome : Protocol.Message -> Message
+splitIncome msg =
+    case msg of
+        Protocol.NewConnection id ->
+            Message.NewConnection id
+
+        _ ->
+            Message.Game msg

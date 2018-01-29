@@ -7,9 +7,10 @@ import Client.Model as Model exposing (Model)
 import Client.Port as Port
 import Dict
 import Keyboard exposing (KeyCode)
+import Task
 
 
-update : Message -> Model -> ( Model, Cmd msg )
+update : Message -> Model -> ( Model, Cmd Message )
 update msg model =
     case msg of
         Message.Location loc ->
@@ -18,6 +19,13 @@ update msg model =
                     Debug.log "Message.Location" loc
             in
             ( model, Cmd.none )
+
+        Message.NewConnection i ->
+            let
+                _ =
+                    Debug.log "Message.NewConnection IN MAIN LOOP WORKS!!" i
+            in
+            update (Message.GUI ClientGUI.Hide) model
 
         Message.Game msg ->
             Game.update msg model.game
@@ -32,6 +40,12 @@ update msg model =
 
         Message.Resize device ->
             ( { model | device = device }, Cmd.none )
+
+
+send : msg -> Cmd msg
+send msg =
+    Task.succeed msg
+        |> Task.perform identity
 
 
 keyToOut : KeyCode -> Cmd msg

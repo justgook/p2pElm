@@ -15,7 +15,13 @@ function countFalse(acc, i) {
   return i ? acc : acc + 1
 }
 function entriesMapper([id, { taken }]) {
-  return [id, [taken.length, taken.reduce(countFalse, 0)]]
+  return {
+    id,
+    totalSlots: taken.length,
+    freeSlots: taken.reduce(countFalse, 0),
+    name: "NAME GOES HERE",
+  }
+  // return [id, [taken.length, taken.reduce(countFalse, 0)]]
 }
 
 module.exports = { //TODO find better api and make it cleanner

@@ -15,6 +15,7 @@ type Message
     = PlayerUpdate
     | Entity EntityAction
     | ServerStatus
+    | NewConnection Int
     | Error Serialized
 
 
@@ -95,6 +96,9 @@ serialize msg =
         ServerStatus ->
             [ "a" ]
 
+        NewConnection connId ->
+            [ "connection", toString connId ]
+
         Error m ->
             let
                 _ =
@@ -105,7 +109,39 @@ serialize msg =
 
 deserialize : Serialized -> Message
 deserialize data =
-    toEntity data
+    case data of
+        "add" :: "1" :: n :: x :: y :: status :: speed :: bombsLeft :: explosionTime :: explosionSize :: [] ->
+            add <|
+                GEntities.Player (str2int n)
+                    { status = string2status status
+                    , point = point x y
+                    , speed = str2int speed
+                    , bombsLeft = str2int bombsLeft
+                    , explosionTime = str2float explosionTime
+                    , explosionSize = str2int explosionSize
+                    }
+
+        "add" :: "2" :: n :: x :: y :: [] ->
+            add <| GEntities.Box (str2int n) (point x y)
+
+        "add" :: "3" :: n :: x :: y :: [] ->
+            add <| GEntities.Wall (str2int n) (point x y)
+
+        "add" :: "4" :: n :: x :: y :: [] ->
+            -- For render we don't care about size / author
+            add <| GEntities.Bomb (str2int n) { size = 0, author = 0, point = point x y }
+
+        "add" :: "5" :: n :: xs ->
+            add <| GEntities.Explosion (str2int n) <| dualFold (\x y -> Point (str2int x) (str2int y)) xs []
+
+        "remove" :: id :: [] ->
+            remove (str2int id)
+
+        "connection" :: connId :: [] ->
+            NewConnection <| str2int connId
+
+        msg ->
+            Error msg
 
 
 fromEntity : GEntities.Entity -> List String
@@ -142,40 +178,6 @@ fromEntity e =
 
         GEntities.Explosion n points ->
             [ "5", toString n ] ++ List.concatMap (\(Point x y) -> [ toString x, toString y ]) points
-
-
-toEntity : Serialized -> Message
-toEntity s =
-    case s of
-        "add" :: "1" :: n :: x :: y :: status :: speed :: bombsLeft :: explosionTime :: explosionSize :: [] ->
-            add <|
-                GEntities.Player (str2int n)
-                    { status = string2status status
-                    , point = point x y
-                    , speed = str2int speed
-                    , bombsLeft = str2int bombsLeft
-                    , explosionTime = str2float explosionTime
-                    , explosionSize = str2int explosionSize
-                    }
-
-        "add" :: "2" :: n :: x :: y :: [] ->
-            add <| GEntities.Box (str2int n) (point x y)
-
-        "add" :: "3" :: n :: x :: y :: [] ->
-            add <| GEntities.Wall (str2int n) (point x y)
-
-        "add" :: "4" :: n :: x :: y :: [] ->
-            -- For render we don't care about size / author
-            add <| GEntities.Bomb (str2int n) { size = 0, author = 0, point = point x y }
-
-        "add" :: "5" :: n :: xs ->
-            add <| GEntities.Explosion (str2int n) <| dualFold (\x y -> Point (str2int x) (str2int y)) xs []
-
-        "remove" :: id :: [] ->
-            remove (str2int id)
-
-        msg ->
-            Error msg
 
 
 dualFold : (a -> a -> b) -> List a -> List b -> List b

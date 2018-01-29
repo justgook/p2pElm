@@ -38,6 +38,7 @@ type Msg
     | ShowSettings
     | ShowDead
     | ShowWin
+    | Hide
 
 
 model : Model
@@ -77,3 +78,6 @@ update msg model =
 
         ShowWin ->
             ( Win, Cmd.none )
+
+        Hide ->
+            ( None, Cmd.none )

@@ -66,7 +66,7 @@ module.exports = function (env: { waitTime?: Number, fps?: Number, signalingUrl?
       }),
     ],
     devServer: {
-      // host: '0.0.0.0',
+      host: '0.0.0.0',
       inline: true,
       stats: 'errors-only',
       contentBase: path.join(__dirname, 'dist'),

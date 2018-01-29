@@ -63,18 +63,21 @@ update msg model =
                 ( explPoints, items2remove, deadPlayers ) =
                     Entities.explode bombId model.entities
 
-                newEntities =
+                playersBombsReturned =
+                    explosinResult items2remove model.entities
+
+                explosionEntity =
                     Explosion bombId explPoints
 
-                --:: addItems
                 entities =
                     --Entities.add [ newEntities ] No point of store explosion on server
                     model.entities
                         |> Entities.remove items2remove
+                        |> Entities.add playersBombsReturned
             in
             { model | entities = entities }
-                ! (sendAddOrUpdate newEntities
-                    :: List.map sendRemove items2remove
+                ! (List.map sendAddOrUpdate (explosionEntity :: playersBombsReturned)
+                    ++ List.map sendRemove items2remove
                   )
 
         PlayerConnects connId entity ->
@@ -85,7 +88,13 @@ update msg model =
                 newPlayers =
                     Dict.insert connId (SlotTaken <| Entities.id entity) model.players
             in
-            { model | entities = newEntities, players = newPlayers } ! Entities.map sendAddOrUpdate newEntities
+            { model
+                | entities = newEntities
+                , players = newPlayers
+            }
+                ! (newConnection connId
+                    :: Entities.map sendAddOrUpdate newEntities
+                  )
 
         PlayerMove dir playerEntity ->
             let
@@ -139,6 +148,36 @@ update msg model =
                 ! [ Cmd.none ]
 
 
+explosinResult : List Entities.Id -> Entities -> List Entity
+explosinResult a b =
+    let
+        helper items2remove entities acc =
+            case items2remove of
+                x :: xs ->
+                    case Entities.get x entities of
+                        Just (Entities.Bomb n { size, author, point }) ->
+                            case ( Dict.get author acc, Entities.get author entities ) of
+                                ( Just (Entities.Player n data), _ ) ->
+                                    Dict.insert n (Entities.Player n { data | bombsLeft = data.bombsLeft + 1 }) acc
+                                        |> helper xs entities
+
+                                ( Nothing, Just (Entities.Player n data) ) ->
+                                    Dict.insert n (Entities.Player n { data | bombsLeft = data.bombsLeft + 1 }) acc
+                                        |> helper xs entities
+
+                                _ ->
+                                    helper xs entities acc
+
+                        e ->
+                            helper xs entities acc
+
+                [] ->
+                    acc
+    in
+    helper a b Dict.empty
+        |> Dict.values
+
+
 placeBomb : Entities.Id -> Entity -> ( List Entity, Entities.Id, Cmd Msg )
 placeBomb lastId entity =
     case entity of
@@ -175,6 +214,11 @@ movePoint (Point x y) dir =
 
         West ->
             Point (x - 1) y
+
+
+newConnection : Int -> Cmd msg
+newConnection =
+    Port.server_outcome << Protocol.serialize << NewConnection
 
 
 sendAddOrUpdate : Entity -> Cmd msg
