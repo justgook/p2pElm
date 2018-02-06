@@ -1,7 +1,7 @@
 {
   "name": "p2p-elm",
   "version": "1.0.0",
-  "description": "Bomberman",
+  "description": "Bit Enemy with bombs",
   "license": "MIT",
   "private": true,
   "repository": {

@@ -6,7 +6,9 @@ cache:
   - node_modules
   - elm-stuff
   - sysconfcpus
+  - yarn-cache
 install:
+- yarn config set cache-folder ./yarn-cache
 - yarn
 - |
   if [ ! -d sysconfcpus/bin ];

@@ -57,9 +57,9 @@ module.exports = function (env: { waitTime?: Number, fps?: Number, signalingUrl?
           test: /\.elm$/,
           exclude: [/elm-stuff/, /node_modules/],
           use: [
-            (env && env.production) ? {
+            ...(!env || !env.production) ? [{
               loader: 'elm-hot-loader',
-            } : {},
+            }] : [{}],
             {
               loader: 'elm-webpack-loader',
               options: {
@@ -146,7 +146,7 @@ module.exports = function (env: { waitTime?: Number, fps?: Number, signalingUrl?
         }))({
           url: `https://justgook.github.io/p2pElm/`,
           image: "preview.png",
-          title: "Bitmap Font Builder",
+          title: "Fun Bombs Game",
           description: (<any>packageData).description
         })
       ),

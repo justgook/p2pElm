@@ -55,10 +55,10 @@ update msg model =
             ( model, Port.client_join room )
 
         Creating Start ->
-            ( BuildingRoom { name = "" }, Navigation.newUrl "/#/create" )
+            ( BuildingRoom { name = "" }, Navigation.newUrl "#/create" )
 
         Creating (OnNameChange name) ->
-            ( BuildingRoom { name = name }, "/#/create/" ++ name |> Navigation.modifyUrl )
+            ( BuildingRoom { name = name }, "#/create/" ++ name |> Navigation.modifyUrl )
 
         Creating (End a) ->
             ( Loading, Port.client_create a.name )
@@ -67,13 +67,13 @@ update msg model =
             ( Lobby data, Cmd.none )
 
         RequestServerList ->
-            Loading ! [ Navigation.newUrl "/#/", Port.client_serverListRequest () ]
+            Loading ! [ Navigation.newUrl "#/", Port.client_serverListRequest () ]
 
         ShowTutorial ->
-            ( Tutorial, Navigation.newUrl "/#/tutorial" )
+            ( Tutorial, Navigation.newUrl "#/tutorial" )
 
         ShowSettings ->
-            ( Settings, Navigation.newUrl "/#/settings" )
+            ( Settings, Navigation.newUrl "#/settings" )
 
         ShowDead ->
             ( Dead, Cmd.none )
@@ -96,4 +96,4 @@ update msg model =
                     ( Settings, Cmd.none )
 
                 _ ->
-                    Loading ! [ Navigation.newUrl "/#/", Port.client_serverListRequest () ]
+                    Loading ! [ Navigation.newUrl "#/", Port.client_serverListRequest () ]
