@@ -20,7 +20,7 @@ install:
     cd ..;
   fi
 script:
-- "$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 yarn build --env.signalingUrl=https://bomberman-server-8qnypiskduwc.runkit.sh
+- "$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 yarn build --env.signalingUrl="https://bomberman-server-8qnypiskduwc.runkit.sh"
 
 deploy:
   provider: pages
