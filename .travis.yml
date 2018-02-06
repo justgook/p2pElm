@@ -2,14 +2,12 @@ language: node_js
 node_js:
 - '8'
 cache:
-  yarn: true
   directories:
   - node_modules
   - elm-stuff
   - sysconfcpus
 install:
 - yarn
-# - yarn elm-install
 - |
   if [ ! -d sysconfcpus/bin ];
   then
@@ -20,12 +18,12 @@ install:
     cd ..;
   fi
 script:
-- "$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 yarn build --env.signalingUrl="https://bomberman-server-8qnypiskduwc.runkit.sh"
+- "$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 yarn build --env.signalingUrl=\"https://bomberman-server-8qnypiskduwc.runkit.sh\""
 
 deploy:
   provider: pages
   skip-cleanup: true
-  github-token: "$GH_TOKEN"
+  github-token: $GH_TOKEN
   keep-history: true
   local-dir: dist
   target-branch: gh-pages
