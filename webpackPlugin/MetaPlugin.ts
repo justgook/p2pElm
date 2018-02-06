@@ -59,8 +59,8 @@ module.exports = class MetaPlugin {
     compiler.plugin('compilation', (compilation: any) => {
       compilation.plugin('html-webpack-plugin-before-html-processing', (htmlPluginData: any, callback: any) => {
         if (this.content !== "") {
-          console.log("html-webpack-plugin-before-html-processing of MetaPlugin")
-          console.log(this.content)
+          // console.log("html-webpack-plugin-before-html-processing of MetaPlugin")
+          // console.log(this.content)
           htmlPluginData.html = htmlPluginData.html.replace(
             /(<\/head>)/i, this.content + '$&');
         }

@@ -11,6 +11,7 @@
   "scripts": {
     "start": "webpack-dev-server --progress",
     "server:express": "node servers/express",
+    "elm-install": "elm-package install --yes",
     "build": "webpack --progress --env.production --define process.env.NODE_ENV=production",
     "start:fast": "webpack-dev-server --progress --env.waitTime=1 --env.fps=300"
   },
@@ -20,6 +21,7 @@
     "copy-webpack-plugin": "4.3.1",
     "cors": "2.8.4",
     "css-loader": "0.28.9",
+    "elm": "0.18.0",
     "elm-hot-loader": "0.5.4",
     "elm-webpack-loader": "4.4.0",
     "favicons-webpack-plugin": "0.0.7",
