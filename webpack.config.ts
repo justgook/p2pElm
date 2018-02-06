@@ -59,7 +59,7 @@ module.exports = function (env: { waitTime?: Number, fps?: Number, signalingUrl?
           use: [
             ...(!env || !env.production) ? [{
               loader: 'elm-hot-loader',
-            }] : [{}],
+            }] : [],
             {
               loader: 'elm-webpack-loader',
               options: {
