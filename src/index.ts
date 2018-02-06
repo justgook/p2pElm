@@ -2,10 +2,22 @@ import { setTimeout } from 'timers';
 
 console.log('my inline loader', require('./build-info.eval.js'));
 require('./i18n/en.css');
+require('./animations.css');
 
 
 declare const SIGNALING_URL: string;
 
+
+async function startServer(app: any, url: string) {
+  /* ----------------------------------------------------------------*/
+  const { server } = await import(/*webpackChunkName: "server" */ './server')
+  const { send, recive, restart } = await server(url);
+  app.ports.client_outcome.subscribe(send); //send client Actions to server
+  recive(app.ports.client_income.send) //recive Updates from server
+  restart('15#' + '|#4 b $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#')
+  setTimeout(() => send(0), 0) // NEED TIMEOUT to wait until server model updates
+  /* ----------------------------------------------------------------*/
+}
 
 
 (async function clientEntry(url: string) {
@@ -22,15 +34,9 @@ declare const SIGNALING_URL: string;
   })
 
   app.ports.client_create.subscribe(async function (name: string) {
-    const { server } = await import(/*webpackChunkName: "server" */ './server')
+    startServer(app, url);
     console.log(`request level creation with name ${name}`)
-    /* ----------------------------------------------------------------*/
-    const { send, recive, restart } = await server(SIGNALING_URL);
-    app.ports.client_outcome.subscribe(send); //send client Actions to server
-    recive(app.ports.client_income.send) //recive Updates from server
-    restart('15#' + '|#4 b $3 3 #|# #@  # # # # #'.repeat(6) + '|#13 #|15#')
-    setTimeout(() => send(0), 0) // NEED TIMEOUT to wait until server model updates
-    /* ----------------------------------------------------------------*/
+
   })
 
   app.ports.client_join.subscribe(function (id: string) {
@@ -41,6 +47,8 @@ declare const SIGNALING_URL: string;
       app.ports.client_outcome.subscribe((a: number) => serverConnection.send(a))
     })
   })
+  /* Delme!!!! */
+  // startServer(app, url);
 
 })(SIGNALING_URL);
 

@@ -9,6 +9,7 @@ import Client.GUI.View.Create as Create
 import Client.GUI.View.GameList as GameList
 import Client.GUI.View.WaitForPlayers as WaitForPlayers
 import Client.Port as Port
+import Navigation exposing (Location)
 
 
 type Model
@@ -30,7 +31,8 @@ type Events
 
 
 type Msg
-    = RequestServerList
+    = Init Location
+    | RequestServerList
     | ServerList GameList.Data
     | Join String
     | Creating Events
@@ -43,7 +45,7 @@ type Msg
 
 model : Model
 model =
-    None
+    Loading
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -53,10 +55,10 @@ update msg model =
             ( model, Port.client_join room )
 
         Creating Start ->
-            ( BuildingRoom Create.default, Cmd.none )
+            ( BuildingRoom { name = "" }, Navigation.newUrl "/#/create" )
 
         Creating (OnNameChange name) ->
-            ( BuildingRoom { name = name }, Cmd.none )
+            ( BuildingRoom { name = name }, "/#/create/" ++ name |> Navigation.modifyUrl )
 
         Creating (End a) ->
             ( Loading, Port.client_create a.name )
@@ -65,13 +67,13 @@ update msg model =
             ( Lobby data, Cmd.none )
 
         RequestServerList ->
-            ( Loading, Port.client_serverListRequest () )
+            Loading ! [ Navigation.newUrl "/#/", Port.client_serverListRequest () ]
 
         ShowTutorial ->
-            ( Tutorial, Cmd.none )
+            ( Tutorial, Navigation.newUrl "/#/tutorial" )
 
         ShowSettings ->
-            ( Settings, Cmd.none )
+            ( Settings, Navigation.newUrl "/#/settings" )
 
         ShowDead ->
             ( Dead, Cmd.none )
@@ -81,3 +83,17 @@ update msg model =
 
         Hide ->
             ( None, Cmd.none )
+
+        Init loc ->
+            case String.split "/" loc.hash of
+                "#" :: "create" :: name :: rest ->
+                    ( BuildingRoom { name = name }, Cmd.none )
+
+                "#" :: "tutorial" :: _ ->
+                    ( Tutorial, Cmd.none )
+
+                "#" :: "settings" :: _ ->
+                    ( Settings, Cmd.none )
+
+                _ ->
+                    Loading ! [ Navigation.newUrl "/#/", Port.client_serverListRequest () ]

@@ -12,7 +12,7 @@ import Style.Scale as Scale
 
 scaled : Int -> Float
 scaled =
-    Scale.modular 64 1.618
+    Scale.modular 32 1.618
 
 
 angleX : Float
@@ -36,38 +36,44 @@ stylesheet =
         cube
             ++ Box.style2
     , style Bomb <| bomb
-    , style Explosion [ pseudo "not(always_true) ~ div.boom" explosion ]
+    , style Explosion [ pseudo "not(always_true) ~ div.boom" (explosion "not(always_true) ~ div.boom") ]
+    , style DeadPlayer
+        [ background red
+        ]
     , style Player
         [ prop "position" "absolute"
         , prop "transform-style" "preserve-3d"
+        , prop "transition-duration" ".25s"
+        , prop "transition-property" "top left"
+        , prop "transition-timing-function" "cubic-bezier(0.215, 0.61, 0.355, 1)"
         ]
     , style PlayerParts
         [ pseudo "not(always_true) ~ div.head"
-            ([ background <| rgb 242 215 85
+            ([ prop "background" "inherit" --background <| rgb 242 215 85 --hsl 61 87.5 60.2
              , translate (unit 0.125) (unit 0.125) (unit 1.5)
              ]
                 ++ charBox "not(always_true) ~ div.head" 0.75 0.5 0.75
             )
         , pseudo "not(always_true) ~ div.body"
-            ([ background <| rgb 242 215 85
+            ([ prop "background" "inherit"
              , translate (unit 0.25) (unit 0.25) (unit 1)
              ]
                 ++ charBox "not(always_true) ~ div.body" 0.5 0.75 0.5
             )
         , pseudo "not(always_true) ~ div.foot"
-            ([ background <| red
+            ([ prop "background" "inherit"
              , translate (unit (0.25 + 0.125)) (unit 0.25) (unit 0.25)
              ]
                 ++ charBox "not(always_true) ~ div.foot" 0.25 0.25 0.5
             )
         , pseudo "not(always_true) ~ div.rheand"
-            ([ background <| red
+            ([ prop "background" "inherit"
              , translate (unit 0.25) (unit 0.75) (unit 0.75)
              ]
                 ++ charBox "not(always_true) ~ div.rheand" 0.25 0.5 0.25
             )
         , pseudo "not(always_true) ~ div.lheand"
-            ([ background <| red
+            ([ prop "background" "inherit"
              , translate (unit 0.25) (unit 0) (unit 0.75)
              ]
                 ++ charBox "not(always_true) ~ div.rheand" 0.25 0.5 0.25
@@ -76,8 +82,50 @@ stylesheet =
     ]
 
 
-explosion =
-    [ prop "background-color" "black"
+explosion : String -> List (Property class variation)
+explosion selector =
+    let
+        base =
+            0.5
+
+        height =
+            1
+
+        same =
+            [ prop "transform-style" "preserve-3d"
+            , prop "content" "''"
+            , prop "display" "block"
+            , prop "position" "absolute"
+            , prop "box-sizing" "border-box"
+            , prop "width" <| unitPX base
+            , prop "height" <| unitPX base
+            , prop "border" (unitPX (base / 2) ++ " solid transparent")
+            ]
+    in
+    [ prop "transform-style" "preserve-3d"
+    , pseudo (selector ++ ":after")
+        (same
+            ++ [ prop "border-bottom-color" "rgb(124, 151, 177)"
+               , prop "transform" "rotateX(-75.5deg)"
+               , prop "transform-origin" "0 100% 0"
+               , prop "border-top-width" "0"
+               , prop "border-bottom-width" <| unitPX height
+               , prop "height" <| unitPX height
+               , prop "left" <| unitPX ((1 - base) / 2)
+               , prop "bottom" <| unitPX ((1 - base) / 2)
+               ]
+        )
+    , pseudo (selector ++ ":before")
+        (same
+            ++ [ prop "border-right-color" "rgb(254, 254, 254)"
+               , prop "transform" "rotateY(75.5deg)"
+               , prop "transform-origin" "100% 0 0"
+               , prop "border-left-width" "0"
+               , prop "border-right-width" <| unitPX height
+               , prop "right" <| unitPX ((1 - base) / 2)
+               , prop "top" <| unitPX ((1 - base) / 2)
+               ]
+        )
     ]
 
 
@@ -175,36 +223,37 @@ charBox : String -> Float -> Float -> Float -> List (Property class variation)
 charBox selector width height depth =
     let
         same =
-            [ background <| rgb 184 143 56
+            [ -- background <| rgb 184 143 56
+              prop "background" "inherit"
             , prop "content" "''"
             , prop "position" "absolute"
             ]
     in
     [ prop "transform-origin" "50% 50%"
     , prop "position" "absolute"
-    , border darkGrey
     , prop "top" "0"
     , prop "left" "0"
-
-    -- , translate 0 0 (unit height)
     , prop "transform-style" "preserve-3d"
     , prop "width" (unitPX width)
     , prop "height" (unitPX depth)
     , pseudo (selector ++ ":before") <|
-        [ origin 0 0 0
-        , prop "transform" ("translateY(" ++ unitPX depth ++ ") rotateX(-90deg) ")
-        , prop "width" (unitPX width)
-        , prop "height" (unitPX height)
-        ]
-            ++ same
+        same
+            ++ [ origin 0 0 0
+               , prop "transform" ("translateY(" ++ unitPX depth ++ ") rotateX(-90deg) ")
+               , prop "width" (unitPX width)
+               , prop "height" (unitPX height)
+               , prop "background-image" "linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25))"
+               ]
     , pseudo (selector ++ ":after") <|
-        [ origin 0 0 0
-        , prop "transform" ("translate(" ++ unitPX width ++ ", " ++ unitPX depth ++ ") rotateZ(-90deg) rotateX(-90deg) ")
-        , prop "width" (unitPX depth)
-        , prop "height" (unitPX height)
-        ]
-            ++ same
-            ++ [ background <| rgb 232 178 61 ]
+        same
+            ++ [ origin 0 0 0
+               , prop "transform" ("translate(" ++ unitPX width ++ ", " ++ unitPX depth ++ ") rotateZ(-90deg) rotateX(-90deg) ")
+               , prop "width" (unitPX depth)
+               , prop "height" (unitPX height)
+               , prop "background-image" "linear-gradient(rgba(0,0,0,.1), rgba(0,0,0,.1))"
+               ]
+
+    -- ++ [  ]
     ]
 
 

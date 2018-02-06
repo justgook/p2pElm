@@ -61,3 +61,16 @@ keyToOut =
         )
         >> Maybe.map Port.client_outcome
         >> Maybe.withDefault Cmd.none
+
+
+
+-- update : Msg -> Model -> ( Model, Cmd Msg )
+-- update msg model =
+--     case msg of
+--         KeyPressed ( key, time ) ->
+--             ( model, time |> Task.map (\x -> ( key, x )) |> Task.perform TimeUpdated )
+--         TimeUpdated ( key, time ) ->
+--             if (Time.inSeconds time - Time.inSeconds model.time) < 2 then
+--                 model ! []
+--             else
+--                 ( { model | time = time, message = key |> toString }, Cmd.none )

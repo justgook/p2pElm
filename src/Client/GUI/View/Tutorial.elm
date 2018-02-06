@@ -2,6 +2,7 @@ module Client.GUI.View.Tutorial exposing (Data, default, view)
 
 -- import Common.View.GUI.Button exposing (button)
 
+import Common.View.GUI.Button as Button exposing (button)
 import Common.View.GUI.Page as Page
 import Common.View.GUI.Theme exposing (ButtonStyles(..), Theme(None))
 import Element exposing (Device, Element, empty, paragraph)
@@ -18,8 +19,7 @@ default =
     { page = 1 }
 
 
-view : Device -> Element Theme variation msg
-view device =
+view device { requestList } =
     Page.view device
         { header =
             Page.header [ i18n "tutorial" ]
@@ -28,5 +28,5 @@ view device =
                 [ paragraph None [ attribute "data-i18n" "hello" ] [ empty ]
                 ]
         , footer =
-            Page.footer []
+            Page.footer [ Button.button "back" requestList ]
         }

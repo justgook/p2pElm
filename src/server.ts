@@ -10,10 +10,8 @@ interface Result {
 
 
 const openConnections = (app: any) => function (peers: any) {
-  // console.log(peers)
   peers.forEach(function (peer: any, i: number) {
     const index = i + 1
-    // app.ports.server_income.send([index, 1, Date.now()]) // Send to Elm That client is created and disconnected
     peer.on('connect', function () {
       app.ports.server_income.send([index, 0, Date.now()]) // Send to Elm
     })
@@ -49,7 +47,7 @@ async function server(url: string) {
         recive(callback) { app.ports.server_outcome.subscribe(callback) },
         restart(room) {
           app.ports.server_start.send(room)
-          connection(3, false).then(openConnections(app))
+          app.ports.server_player_count.subscribe((count: number) => connection(count, url).then(openConnections(app)))
         },
       })
     })

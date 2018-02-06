@@ -38,8 +38,3 @@ view model =
             , Element.mapAll identity GuiTheme Basics.never (GUIview.view model.device model.gui)
             ]
         |> Element.viewport stylesheet
-
-
-
---
---

@@ -1,9 +1,8 @@
 module Game.Entities
     exposing
-        ( Entities(Entities)
+        ( Entities
         , Entity(..)
         , Id
-        , PlayerStatus(..)
         , add
         , collision
         , empty
@@ -36,7 +35,7 @@ type Entity
     | Explosion Id (List Point)
     | Player
         Id
-        { status : PlayerStatus
+        { isDead : Bool
         , point : Point
         , bombsLeft : Int
         , explosionTime : Float
@@ -45,25 +44,11 @@ type Entity
         }
 
 
-type PlayerStatus
-    = PlayerOnline
-    | PlayerDead
-
-
-
--- https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
--- http://package.elm-lang.org/packages/elm-lang/trampoline/1.0.1/Trampoline
--- https://github.com/TheSeamau5/elm-quadtree/blob/master/src/QuadTree.elm
-
-
 type Entities
     = Entities (Dict Id Entity)
 
 
-
-{- ( updateAddItems, removeIds, removeInTimItems ) -}
-
-
+explode : Id -> Entities -> ( List Point, List Id, List Id )
 explode bombId entities =
     let
         ( explPoints, items2remove, deadPlayers, rest ) =
@@ -229,10 +214,6 @@ remove x (Entities xs) =
         |> Entities
 
 
-
--- Dict.remove
-
-
 get : Id -> Entities -> Maybe Entity
 get n (Entities xs) =
     Dict.get n xs
@@ -374,12 +355,12 @@ parseRow id_ x y multiplier data result =
         playerWrapper : Int -> Int -> Int -> Entity
         playerWrapper n x y =
             Player n
-                { status = PlayerOnline
+                { isDead = False
                 , point = Point x y
                 , speed = 1
                 , bombsLeft = 3
-                , explosionTime = 2
-                , explosionSize = 10
+                , explosionTime = 3
+                , explosionSize = 5
                 }
     in
     case String.uncons data of

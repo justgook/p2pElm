@@ -4,16 +4,19 @@ import Client.Game.Main as Game
 import Client.Game.StyleDefault exposing (angleX, angleZ, scaled)
 import Client.Game.Theme as Theme exposing (Theme)
 import Client.Game.View.Character as Character
+import Color exposing (Color)
 import Common.Point exposing (Point(Point))
+import Dict
 import Element as Element exposing (..)
 import Element.Attributes as Attributes exposing (..)
-import Game.Entities as Entities exposing (Entities, Entity(..))
+import Element.Keyed as Keyed
+import Game.Entities as Entities exposing (Entities, Entity(..), Id)
 import Html
 import Html.Attributes as Html
 
 
 view : Device -> Game.Model -> Element Theme Never Never
-view device ({ entities, size } as model) =
+view device ({ entities, size, playerColor } as model) =
     let
         _ =
             Debug.log "Client.Game.View" "updated"
@@ -28,12 +31,12 @@ view device ({ entities, size } as model) =
             [ el
                 Theme.None
                 [ inlineStyle [ ( "perspective", "1500px" ), ( "perspective-origin", "50% 50%" ) ] ]
-                (row Theme.FLoor
+                (Keyed.row Theme.FLoor
                     [ width (unit size.width)
                     , height (unit size.height)
                     , inlineStyle [ ( "transform", "rotateX(" ++ toString angleX ++ "rad) rotateZ(" ++ toString angleZ ++ "rad)" ) ]
                     ]
-                    (Entities.map draw entities)
+                    (Entities.map (draw playerColor) entities)
                 )
             ]
 
@@ -52,23 +55,35 @@ unitPX i =
 -- http://package.elm-lang.org/packages/elm-lang/lazy/2.0.0/Lazy
 
 
-draw : Entity -> Element Theme Never Never
-draw e =
+draw : Dict.Dict Id Color -> Entity -> ( String, Element Theme Never Never )
+draw playerColor e =
     case e of
-        Box _ p ->
-            entity empty Theme.Box p
+        Box n p ->
+            ( toString n, entity empty Theme.Box p )
 
-        Wall _ p ->
-            entity empty Theme.Wall p
+        Wall n p ->
+            ( toString n, entity empty Theme.Wall p )
 
-        Bomb _ { point } ->
-            entity empty Theme.Bomb point
+        Bomb n { point } ->
+            ( toString n, entity empty Theme.Bomb point )
 
-        Explosion _ points ->
-            explosion Theme.Explosion points
+        Explosion n points ->
+            ( toString n, explosion Theme.Explosion points )
 
-        Player _ { point } ->
-            entity Character.view Theme.Player point
+        Player n { point, isDead } ->
+            if isDead then
+                ( toString n, entity empty Theme.DeadPlayer point )
+            else
+                ( toString n, entity (getColor n playerColor |> Character.view) Theme.Player point )
+
+
+getColor : Id -> Dict.Dict Id Color -> Color
+getColor id colors =
+    let
+        _ =
+            Debug.log "Getting color" <| colors
+    in
+    Dict.get id colors |> Maybe.withDefault Color.black
 
 
 explosion : Theme -> List Point -> Element Theme Never Never

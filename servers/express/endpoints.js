@@ -21,27 +21,34 @@ function entriesMapper([id, { taken }]) {
     freeSlots: taken.reduce(countFalse, 0),
     name: "NAME GOES HERE",
   }
-  // return [id, [taken.length, taken.reduce(countFalse, 0)]]
 }
 
-module.exports = { //TODO find better api and make it cleanner
+const cors = require("cors");
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    callback(null, true);
+  },
+  credentials: true,
+}
+
+module.exports = {
+  '*': cors(corsOptions),
   '': bodyParser.json(), //parse post bodies (json)
 
   '/list'(req, res) {
     res.json(Object.entries(servers).map(entriesMapper))
   },
 
-  '/create-server'(req, res) { //TODO move url to Env variables
+  '/create-server'(req, res) {
     const offers = req.body
     const offersCount = offers.length
-    const id = 1 // TODO update to real id!!
-    // const id = Date.now()
-    servers[id] = { offers, join: null, taken: Array.apply(0, Array(offersCount)).map(() => false) } //TODO update join to some buffer function / or error response
-    console.log(`Server(id: ${id}) created with ${offersCount} slots`)
+    const id = Date.now()
+    servers[id] = { offers, join: null, taken: Array.apply(0, Array(offersCount)).map(() => false) }
     res.json({ id })
     //TODO add expire timeout (read from url or set max) and send that data back to client (for adding countdown - before game starts)
   },
-  '/wait-for-players/:id'(req, res) { //TODO move url to Env variables
+  '/wait-for-players/:id'(req, res) {
     const id = req.params.id
     if (servers[id]) {
       res.writeHead(200, {
@@ -50,11 +57,11 @@ module.exports = { //TODO find better api and make it cleanner
         'Connection': 'keep-alive'
       })
       console.log(`Server(id: ${id}) waits for clients`)
-      let uid = -1
+
+      let uid = 0;
       const event = 'message'
-      // const data = 'test data'
       servers[id].join = (data) => res.write(
-        'id:' + (++uid) + '\n' +
+        'id:' + (uid++) + '\n' +
         'event:' + (event) + '\n' +
         'data:' + JSON.stringify(data) + '\n'
       )
@@ -63,7 +70,6 @@ module.exports = { //TODO find better api and make it cleanner
       }
       let t = setInterval(function () {
         ping(res)
-        // console.log(`Send Ping to Server(id: ${id})`)
         res.write('\n\n')
         res.flush()
       }, PING_INTERVAL)

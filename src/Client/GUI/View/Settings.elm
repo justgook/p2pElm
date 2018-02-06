@@ -12,11 +12,10 @@ import Util.I18n exposing (i18n)
 -- http://pixelastic.github.io/css-flags/
 
 
-view : Element.Device -> Element.Element Theme variation msg
-view device =
+view device { requestList } =
     Page.view device
         { header =
-            Page.header []
+            Page.header [ i18n "settings" ]
         , content =
             -- [ ( "languages", Cmd.none ) ]
             --     |> Button.fromList
@@ -25,6 +24,6 @@ view device =
         , footer =
             -- [ ( "close", Cmd.none ) ]
             --     |> Button.fromList
-            []
+            [ Button.button "back" requestList ]
                 |> Page.footer
         }

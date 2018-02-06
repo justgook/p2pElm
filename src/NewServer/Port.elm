@@ -12,4 +12,7 @@ port server_income : (( Int, Int, Int ) -> msg) -> Sub msg
 port server_outcome : Serialized -> Cmd msg
 
 
+port server_player_count : Int -> Cmd msg
+
+
 port server_start : (String -> msg) -> Sub msg

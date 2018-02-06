@@ -30,9 +30,9 @@ declare class EventSource {
   constructor(url: string, options?: { withCredentials?: boolean });
   addEventListener(event: string, callback: (e: { data: string }) => void, haveNoClue: boolean): void;
 }
-function waitForPlayers(peers: any) {
+function waitForPlayers(peers: any, url: string) {
   return function ({ id }: { id: string }) {
-    var evtSource = new EventSource('/wait-for-players/' + id, { withCredentials: true })
+    var evtSource = new EventSource(url + '/wait-for-players/' + id, { withCredentials: true })
     evtSource.addEventListener('message', function (e) {
       const data = JSON.parse(e.data)
       console.log('answer', data.answer)
@@ -41,11 +41,11 @@ function waitForPlayers(peers: any) {
   }
 }
 
-const establishSignalingServer = function (data: any) {
+const establishSignalingServer = function (data: any, url: string) {
   //TODO merge two next lines
   const offers = data.map(function (_: { offer: string }) { return _.offer })
   const peers = data.map(function (_: { peer: any }) { return _.peer })
-  return fetch('/create-server', {
+  return fetch(url + '/create-server', {
     credentials: 'include',
     method: 'POST',
     headers: {
@@ -57,7 +57,7 @@ const establishSignalingServer = function (data: any) {
     .then(function (response) {
       var contentType = response.headers.get('content-type')
       if (contentType && contentType.includes('application/json')) {
-        return response.json().then(waitForPlayers(peers))
+        return response.json().then(waitForPlayers(peers, url))
       }
       throw new TypeError('Oops, we have not got JSON!')
     })
@@ -65,14 +65,12 @@ const establishSignalingServer = function (data: any) {
 }
 
 //TODO add signalling server url
-const connection = function (count: number, manual: boolean) {
+const connection = function (count: number, url: string) {
   const offers = prepareOffers(count || 1)
-  return manual
-    ? offers
-    : offers.then(function (data) {
-      establishSignalingServer(data)
-      return data.map(function (_: { peer: any }) { return _.peer })
-    })
+  return offers.then(function (data) {
+    establishSignalingServer(data, url)
+    return data.map(function (_: { peer: any }) { return _.peer })
+  })
 }
 
 export { connection }

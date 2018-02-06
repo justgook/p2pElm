@@ -1,0 +1,37 @@
+language: node_js
+node_js:
+- '8'
+cache:
+  yarn: true
+  directories:
+  - node_modules
+  - elm-stuff
+  - sysconfcpus
+install:
+- yarn
+- yarn elm-install
+- |
+  if [ ! -d sysconfcpus/bin ];
+  then
+    git clone https://github.com/obmarg/libsysconfcpus.git;
+    cd libsysconfcpus;
+    ./configure --prefix=$TRAVIS_BUILD_DIR/sysconfcpus;
+    make && make install;
+    cd ..;
+  fi
+script:
+- "$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 yarn build --env.signalingUrl=https://bomberman-server-8qnypiskduwc.runkit.sh
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: "$GH_TOKEN"
+  keep-history: true
+  local-dir: dist
+  target-branch: gh-pages
+  verbose: true
+  on:
+    branch: master
+env:
+  global:
+    secure: xcVvbqNFAblH2RDX8yrv8Oc3vz2IBR50NDJzeCMmXJB3xdSderLEAlFNdtbauQdg1b0Mv+PtoCN12VSDXYC+RDcEknJlnXwZNOS/RBn7A4bkSqIq1D4qRiuEB7qm4qqLksZXEKKF2bc4d5eyhL6nHueN6wWldJY7Yml6EG8d7wInJx59jE/B1ECXzAOadRoJMPEAWguhKL1lKTQN+AcWsjFn/+cdpqc7VavpDj6dVYc0FoeaKNr48qHUbz4HxcZFf4uUdr4Tvmb11HZfhp1hDaR5nnQSOBz+TW3jGBA1CKIUcZsvSw5j76fZBcbBwMxAGYN4MOCJ22Q3y1zsLbP9sf4fptEmnVfN/azn3kEEvBBDlABwtyiQ08o/UUkgRlE42uPwmi0SxyyrDluzs71EeYKQVlUnrVFZfhLlwMCcncd/tMk09hEX+p2GBBtii+udctTCgrkcnCIvz/Fb/RP5q5sAUt7ZGg5uXz3yo3y4PlytqdU95mckcuuqTVvNTgBMSDHP1OHrmpmrC0ce+onmubU2dAsm9H3Z9vhtZhV7fU6Ia+vhomPqg+meOwdg5t5vXC74qZLGPAZ1Q3IlPBUoqOka7rDScjPPytVnHN/gL/CRmMIRwhsiiaE0+FqODffPEGrBXce0QmZ1bQnCxOrWgZQZ83FsQXJJJeTCWasDhgE=

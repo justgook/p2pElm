@@ -10,3 +10,4 @@ type Theme
     | FLoor
     | Player
     | PlayerParts
+    | DeadPlayer

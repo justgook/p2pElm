@@ -48,7 +48,7 @@ body > div {
 [data-i18n="no games"]::after {
   display: block;
   text-align: center;
-  content: "Create one создать";
+  content: "Create one";
 }
 
 [data-i18n="create room"]::before {
@@ -61,4 +61,8 @@ body > div {
 
 [data-i18n="tutorial"]::before {
   content: "TUTORIAL";
+}
+
+[data-i18n="settings"]::before {
+  content: "SETTINGS";
 }

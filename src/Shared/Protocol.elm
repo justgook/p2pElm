@@ -8,12 +8,11 @@ module Shared.Protocol
         )
 
 import Common.Point exposing (Point(Point))
-import Game.Entities as GEntities exposing (PlayerStatus(..))
+import Game.Entities as GEntities
 
 
 type Message
-    = PlayerUpdate
-    | Entity EntityAction
+    = Entity EntityAction
     | ServerStatus
     | NewConnection Int
     | Error Serialized
@@ -25,50 +24,6 @@ type EntityAction
 
 
 
--- https://danthedev.com/2015/07/25/binary-in-javascript
-{-
-      Old Way
-      |Type|Data|
-           Type 2bit
-               ServerStatus 0b00
-               PlayerUpdate 0b01
-               ItemUpadate  0b10
-           Data 30bit
-               ItemUpadateData
-                   Action 2bit
-                       Add         0b00
-                       Remove      0b01
-                       Move        0b10
-                       AddExplosin 0b11
-                   Id 13 bit (64x64 map)
-                   X 7bit
-                   Y 7bit
-
-       New Way
-       |Action/ItemInfo (32bit)|Data (List of 32bit)|
-       ------Action/ItemInfo0----------
-           Type 2bit
-               ServerStatus 0b00
-               PlayerUpdate 0b01
-               ItemUpadate  0b10
-           ItemUpadateData
-               Action 2bit
-                   Add         0b00
-                   Remove      0b01
-                   Move        0b10
-                   AddExplosin 0b11
-               Id 13 bit (64x64 map)
-       --------------------------------
-           DataAdd
-               TileType|x|y|
-           DataRemove
-               none
-           DataMove
-               |x|y|
-           AddExplosin
-               [(x1|y1), (x2|y2),...(xn,yn)]
-   !!!!TRY SPLIT X/Y to cell where (x1,x2 - is first and second number of coordinates)
--}
 -- https://codereview.stackexchange.com/questions/3569/pack-and-unpack-bytes-to-strings
 
 
@@ -76,17 +31,11 @@ type alias Serialized =
     List String
 
 
-
--- type alias Deserialize =
---     String
-
-
 serialize : Message -> Serialized
 serialize msg =
+    -- var realArray = Array.prototype.slice.call(uint8array);
+    -- app.ports.receiveImage.send(realArray);
     case msg of
-        PlayerUpdate ->
-            [ "a" ]
-
         Entity (Add entity) ->
             [ "add" ] ++ fromEntity entity
 
@@ -110,10 +59,10 @@ serialize msg =
 deserialize : Serialized -> Message
 deserialize data =
     case data of
-        "add" :: "1" :: n :: x :: y :: status :: speed :: bombsLeft :: explosionTime :: explosionSize :: [] ->
+        "add" :: "1" :: n :: x :: y :: isDead :: speed :: bombsLeft :: explosionTime :: explosionSize :: [] ->
             add <|
                 GEntities.Player (str2int n)
-                    { status = string2status status
+                    { isDead = isDead == "1"
                     , point = point x y
                     , speed = str2int speed
                     , bombsLeft = str2int bombsLeft
@@ -147,7 +96,7 @@ deserialize data =
 fromEntity : GEntities.Entity -> List String
 fromEntity e =
     case e of
-        GEntities.Player n { status, point, speed, bombsLeft, explosionTime, explosionSize } ->
+        GEntities.Player n { isDead, point, speed, bombsLeft, explosionTime, explosionSize } ->
             let
                 (Point x y) =
                     point
@@ -156,7 +105,10 @@ fromEntity e =
             , toString n
             , toString x
             , toString y
-            , status2string status
+            , if isDead then
+                "1"
+              else
+                "0"
             , toString speed
             , toString bombsLeft
             , toString explosionTime
@@ -188,29 +140,6 @@ dualFold f l acc =
 
         _ ->
             acc
-
-
-status2string : PlayerStatus -> String
-status2string status =
-    case status of
-        PlayerOnline ->
-            "1"
-
-        PlayerDead ->
-            "2"
-
-
-string2status : String -> PlayerStatus
-string2status s =
-    case s of
-        "1" ->
-            PlayerOnline
-
-        "2" ->
-            PlayerDead
-
-        _ ->
-            PlayerOnline
 
 
 str2int : String -> Int

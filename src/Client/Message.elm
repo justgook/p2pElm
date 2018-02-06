@@ -2,7 +2,7 @@ module Client.Message exposing (..)
 
 import Client.GUI.Main as ClientGUI
 import Client.GUI.View.Create as CreateGUI
-import Client.Game.Main as Game
+import Client.Game.Message as Game
 import Element exposing (Device)
 import Keyboard exposing (KeyCode)
 import Navigation exposing (Location)

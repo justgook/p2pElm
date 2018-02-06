@@ -3,7 +3,7 @@ port module NewServer.Update exposing (Model, Msg(..), PlayerSlot(..), Players, 
 import Common.Players.Message as PlayersMessage exposing (Action(..), Direction(..))
 import Common.Point exposing (Point(Point))
 import Dict exposing (Dict)
-import Game.Entities as Entities exposing (Entities(Entities), Entity(..), PlayerStatus(..))
+import Game.Entities as Entities exposing (Entities, Entity(..))
 import NewServer.Port as Port
 import Process
 import Shared.Protocol as Protocol exposing (Message(..))
@@ -64,7 +64,7 @@ update msg model =
                     Entities.explode bombId model.entities
 
                 playersBombsReturned =
-                    explosinResult items2remove model.entities
+                    explosionResult items2remove model.entities
 
                 explosionEntity =
                     Explosion bombId explPoints
@@ -74,9 +74,15 @@ update msg model =
                     model.entities
                         |> Entities.remove items2remove
                         |> Entities.add playersBombsReturned
+
+                deadEntities =
+                    kill deadPlayers entities []
+
+                outCome =
+                    playersBombsReturned |> List.filter (isNotDead deadPlayers)
             in
-            { model | entities = entities }
-                ! (List.map sendAddOrUpdate (explosionEntity :: playersBombsReturned)
+            { model | entities = Entities.remove deadPlayers entities }
+                ! (List.map sendAddOrUpdate (explosionEntity :: outCome ++ deadEntities)
                     ++ List.map sendRemove items2remove
                   )
 
@@ -145,11 +151,38 @@ update msg model =
                 , lastId = lastId
                 , players = players
             }
-                ! [ Cmd.none ]
+                ! [ Port.server_player_count (Dict.size players) ]
 
 
-explosinResult : List Entities.Id -> Entities -> List Entity
-explosinResult a b =
+isNotDead : List Entities.Id -> Entity -> Bool
+isNotDead ids entity =
+    case entity of
+        Player n _ ->
+            not <| List.member n ids
+
+        _ ->
+            True
+
+
+kill : List Entities.Id -> Entities -> List Entity -> List Entity
+kill ids entities acc =
+    case ids of
+        x :: xs ->
+            case Entities.get x entities of
+                Just (Player n data) ->
+                    Player n { data | isDead = True }
+                        :: acc
+                        |> kill xs entities
+
+                _ ->
+                    kill xs entities acc
+
+        [] ->
+            acc
+
+
+explosionResult : List Entities.Id -> Entities -> List Entity
+explosionResult a b =
     let
         helper items2remove entities acc =
             case items2remove of
@@ -239,19 +272,6 @@ entity2addMsgRemove e =
 entity2addMsg : Entity -> Protocol.Message
 entity2addMsg e =
     Protocol.Entity (Protocol.Add e)
-
-
-isOnline : Entity -> Bool
-isOnline e =
-    case e of
-        Player _ { status } ->
-            if status == PlayerOnline then
-                True
-            else
-                False
-
-        _ ->
-            False
 
 
 isPlayer : a -> Entity -> Bool

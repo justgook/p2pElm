@@ -39,10 +39,10 @@ view device model =
             Page.loading device
 
         Tutorial ->
-            Tutorial.view device
+            Tutorial.view device Message.actions
 
         Settings ->
-            Settings.view device
+            Settings.view device Message.actions
 
         Dead ->
             Element.empty

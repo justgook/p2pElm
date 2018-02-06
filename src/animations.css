@@ -1,0 +1,38 @@
+@keyframes example1 {
+  from {
+    transform: scale3d(0, 0, 0);
+  }
+
+  to {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes tada {
+  from {
+    transform: scale3d(0, 0, 0);
+  }
+
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: scale3d(1, 1, 0.8);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: scale3d(1, 1, 1.2);
+  }
+
+  to {
+    transform: scale3d(0, 0, 0);
+  }
+}
+
+.boom {
+  transform: scale3d(0, 0, 0);
+  animation: tada 1s linear;
+}
