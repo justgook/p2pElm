@@ -12,8 +12,6 @@
     "start": "webpack-dev-server --progress",
     "server:express": "node servers/express",
     "build": "webpack --progress --env.production --define process.env.NODE_ENV=production",
-    "test": "wdio wdio.conf.js --format-options",
-    "test:dev": "wdio wdio.conf.js --watch",
     "start:fast": "webpack-dev-server --progress --env.waitTime=1 --env.fps=300"
   },
   "devDependencies": {
