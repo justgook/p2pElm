@@ -9,7 +9,7 @@ cache:
   - sysconfcpus
 install:
 - yarn
-- yarn elm-install
+# - yarn elm-install
 - |
   if [ ! -d sysconfcpus/bin ];
   then
