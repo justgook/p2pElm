@@ -10,6 +10,8 @@ cache:
 install:
 - yarn config set cache-folder ./yarn-cache
 - yarn
+- yarn elm-install
+- cd elm-stuff && patch -p1 < ../style-elements.patch
 - |
   if [ ! -d sysconfcpus/bin ];
   then

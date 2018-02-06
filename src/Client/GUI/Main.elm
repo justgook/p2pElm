@@ -52,7 +52,7 @@ update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         Join room ->
-            ( model, Port.client_join room )
+            ( Loading, Port.client_join room )
 
         Creating Start ->
             ( BuildingRoom { name = "" }, Navigation.newUrl "#/create" )

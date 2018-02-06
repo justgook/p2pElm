@@ -91,8 +91,9 @@ disabled =
 
 button : List (Style.Property class variation)
 button =
-    [ focus shadowPack
-    , text <| rgb 254 253 255
+    [ focus [ prop "outline" "none" ]
+    , text <|
+        rgb 254 253 255
     , Shadow.text
         { offset = ( 0, 2 )
 
