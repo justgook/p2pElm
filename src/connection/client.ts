@@ -1,5 +1,6 @@
 // import { SimplePeer } from 'simple-peer'
 import * as Peer from 'simple-peer'
+const iceServers = require('./iceServers')
 
 const getOffer = function (serverId: string, url: string) {
   return fetch(url + '/join/' + serverId, { // TODO move to env variable or some custom setting field
@@ -47,7 +48,7 @@ declare class SimplePeer {
 
 function connectToServer(serverId: string, url: string) {
   return function how(args: { offer: string, index: string }) {// TODO get rid of those functions that returns functions Grr
-    const p: SimplePeer = new Peer({ /*, trickle: false*/ }) //TODO what for trickle?
+    const p: SimplePeer = new Peer({ reconnectTimer: 100, config: { iceServers } }) //TODO what for trickle?
     const answer = new Promise(function (resolve, reject) {
       p.on('signal', function (data: string) { //TODO findout why ther is {candidate} signals (what for)
         // if(data.candidate)

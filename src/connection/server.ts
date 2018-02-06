@@ -1,5 +1,6 @@
 const Peer = require('simple-peer')
-
+const iceServers = require('./iceServers')
+console.log(iceServers)
 const prepareOffers = function (count: number) {
   return Promise.all(
     Array.apply(0, Array(count)).map(function (_: number, i: number) {
@@ -7,6 +8,7 @@ const prepareOffers = function (count: number) {
         const peer = new Peer({
           initiator: true,
           reconnectTimer: 100,
+          config: { iceServers }
         })
         // create all connections as server (open door for peers)
         peer.on('error', function (err: string) { console.log('error', err) })
